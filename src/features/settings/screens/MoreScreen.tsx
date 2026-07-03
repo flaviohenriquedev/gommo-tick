@@ -12,13 +12,13 @@ import { spacing } from "@/theme/spacing";
 export function MoreScreen() {
   return (
     <Screen backgroundColor={colors.surface}>
-      <Header title="Mais" canGoBack={false} />
+      <Header title="Mais" />
       <AppText variant="label" style={styles.section}>
         OPÇÕES
       </AppText>
       <Card style={styles.card}>
         {settingsItems.map(({ label, value, icon: Icon }) => (
-          <Pressable key={label} style={styles.row}>
+          <Pressable key={label} style={({ pressed }) => [styles.row, pressed ? styles.rowPressed : null]}>
             <View style={styles.rowLabel}>
               <Icon color={colors.primary} size={20} />
               <AppText>{label}</AppText>
@@ -57,6 +57,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: spacing[4]
+  },
+  rowPressed: {
+    opacity: 0.68,
+    transform: [{ scale: 0.99 }]
   },
   rowLabel: {
     alignItems: "center",

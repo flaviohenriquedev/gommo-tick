@@ -3,6 +3,7 @@ import { CalendarDays } from "lucide-react-native";
 
 import { AppText } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Header } from "@/components/ui/Header";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { Screen } from "@/components/ui/Screen";
@@ -26,7 +27,7 @@ export function MirrorScreen() {
         <MetricCard label="Banco de horas" value="+08h30" accent={colors.success} />
       </View>
 
-      <View style={styles.list}>
+      <Card style={styles.list}>
         {mirrorDays.map((day) => (
           <View key={day.day} style={styles.barRow}>
             <AppText variant="label" color={colors.text} style={styles.day}>
@@ -46,7 +47,7 @@ export function MirrorScreen() {
             <AppText style={styles.hours}>{day.hours}</AppText>
           </View>
         ))}
-      </View>
+      </Card>
 
       <Button label="Ver detalhes do dia" onPress={() => undefined} variant="secondary" style={styles.action} />
     </Screen>
@@ -73,8 +74,8 @@ const styles = StyleSheet.create({
     marginTop: spacing[5]
   },
   list: {
-    gap: spacing[5],
-    marginTop: spacing[6]
+    gap: spacing[3],
+    marginTop: spacing[3]
   },
   barRow: {
     alignItems: "center",
@@ -100,6 +101,6 @@ const styles = StyleSheet.create({
     width: 56
   },
   action: {
-    marginTop: "auto"
+    marginTop: spacing[8]
   }
 });

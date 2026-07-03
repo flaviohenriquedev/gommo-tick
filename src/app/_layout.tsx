@@ -47,11 +47,13 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="ponto" />
-        <Stack.Screen name="meu-ponto" />
-        <Stack.Screen name="espelho" />
-        <Stack.Screen name="banco-horas" />
-        <Stack.Screen name="solicitacoes" />
+        <Stack.Screen name="register-point" />
+        <Stack.Screen name="my-point" />
+        <Stack.Screen name="timesheet" />
+        <Stack.Screen name="hour-balance" />
+        <Stack.Screen name="more" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="requests" />
       </Stack>
     </QueryClientProvider>
   );

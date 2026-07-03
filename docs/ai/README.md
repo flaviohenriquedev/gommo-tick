@@ -15,5 +15,6 @@ Esta pasta guarda as referencias que todo agente deve consultar antes de trabalh
 - Comece pela especificacao.
 - Consulte o preview HTML para entender a direcao visual.
 - Ao implementar, prefira componentes React Native/Expo reais em vez de copiar estruturas do HTML.
+- Use ingles para nomes tecnicos de pastas, arquivos, componentes, funcoes, tipos e variaveis. Use portugues apenas no que aparece para o usuario, como labels, mensagens, exceptions e textos de interface.
+- Use `defaultSpacing` como espacamento padrao entre componentes, margins e gaps. Ele corresponde a `spacing[3]`. Paddings estruturais podem ser maiores quando fizer sentido visual.
 - Se houver conflito entre o preview e a especificacao, a especificacao prevalece.
-

@@ -6,6 +6,7 @@ import {
   FileClock,
   History,
   ListChecks,
+  Menu,
   Settings,
   ShieldCheck,
   TimerReset,
@@ -18,16 +19,19 @@ export const todaySummary = {
   date: "Quinta-feira, 02 de Julho",
   plannedHours: "08h00",
   workedHours: "06h00",
-  progress: 75
+  progress: 75,
+  currentBalance: "+00h15",
+  expectedExit: "17:15",
+  lastEntry: "Entrada às 08:00"
 };
 
 export const menuItems = [
-  { label: "Meu Ponto", href: "/meu-ponto", icon: Clock3 },
-  { label: "Espelho", href: "/espelho", icon: FileClock },
-  { label: "Solicitações", href: "/solicitacoes", icon: ListChecks },
-  { label: "Extrato", href: "/banco-horas", icon: TimerReset },
-  { label: "Banco", href: "/banco-horas", icon: History },
-  { label: "Perfil", href: "/perfil", icon: UserRound }
+  { label: "Meu Ponto", href: "/my-point", icon: Clock3 },
+  { label: "Espelho", href: "/timesheet", icon: FileClock },
+  { label: "Solicitações", href: "/requests", icon: ListChecks },
+  { label: "Extrato", href: "/hour-balance", icon: TimerReset },
+  { label: "Banco", href: "/hour-balance", icon: History },
+  { label: "Mais", href: "/more", icon: Menu }
 ] as const;
 
 export const timeEntries = [
@@ -58,6 +62,33 @@ export const requests = [
   { title: "Banco de Horas", date: "30/06/2026", status: "Aprovado", tone: "success" },
   { title: "Folga", date: "15/06/2026", status: "Aprovado", tone: "success" },
   { title: "Ajuste de Ponto", date: "10/06/2026", status: "Rejeitado", tone: "error" }
+] as const;
+
+export const notifications = [
+  {
+    title: "Ponto registrado",
+    description: "Sua entrada de hoje foi registrada às 08:00.",
+    time: "Agora",
+    tone: "success"
+  },
+  {
+    title: "Solicitação pendente",
+    description: "Seu ajuste de ponto está aguardando aprovação.",
+    time: "Hoje",
+    tone: "warning"
+  },
+  {
+    title: "Banco de horas atualizado",
+    description: "Foram adicionadas 02h00 ao seu saldo.",
+    time: "Ontem",
+    tone: "info"
+  },
+  {
+    title: "Lembrete",
+    description: "Não esqueça de registrar a saída no fim do expediente.",
+    time: "30/06",
+    tone: "neutral"
+  }
 ] as const;
 
 export const profileItems = [

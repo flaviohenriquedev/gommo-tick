@@ -18,6 +18,7 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: "#f0edf5",
+          display: "none",
           height: 70,
           paddingBottom: 10,
           paddingTop: 8
@@ -32,21 +33,21 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="historico"
+        name="history"
         options={{
           title: "Histórico",
           tabBarIcon: ({ color, size }) => <Clock3 color={color} size={size} />
         }}
       />
       <Tabs.Screen
-        name="notificacoes"
+        name="notifications"
         options={{
           title: "Notificações",
           tabBarIcon: ({ color, size }) => <Bell color={color} size={size} />
         }}
       />
       <Tabs.Screen
-        name="mais"
+        name="more"
         options={{
           title: "Mais",
           tabBarIcon: ({ color, size }) => <Menu color={color} size={size} />

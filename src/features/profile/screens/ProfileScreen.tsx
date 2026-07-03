@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
@@ -23,6 +23,9 @@ export function ProfileScreen() {
   return (
     <Screen padded={false} backgroundColor={colors.surface}>
       <View style={styles.header}>
+        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
+          <ChevronLeft color={colors.surface} size={28} strokeWidth={2.2} />
+        </Pressable>
         <View style={styles.avatar}>
           <AppText style={styles.avatarText}>FH</AppText>
         </View>
@@ -37,7 +40,7 @@ export function ProfileScreen() {
       <View style={styles.content}>
         <Card style={styles.card}>
           {profileItems.map(({ label, value, icon: Icon }) => (
-            <Pressable key={label} style={styles.row}>
+            <Pressable key={label} style={({ pressed }) => [styles.row, pressed ? styles.rowPressed : null]}>
               <View style={styles.rowLabel}>
                 <Icon color={colors.primary} size={20} />
                 <AppText>{label}</AppText>
@@ -64,6 +67,17 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: radius.sheet,
     paddingBottom: spacing[8],
     paddingTop: spacing[10]
+  },
+  backButton: {
+    alignItems: "center",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    left: spacing[5],
+    position: "absolute",
+    top: spacing[10],
+    width: 40,
+    zIndex: 2
   },
   avatar: {
     alignItems: "center",
@@ -101,6 +115,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: spacing[4]
   },
+  rowPressed: {
+    opacity: 0.68,
+    transform: [{ scale: 0.99 }]
+  },
   rowLabel: {
     alignItems: "center",
     flexDirection: "row",
@@ -112,6 +130,6 @@ const styles = StyleSheet.create({
     gap: spacing[1]
   },
   signOut: {
-    marginTop: "auto"
+    marginTop: spacing[8]
   }
 });

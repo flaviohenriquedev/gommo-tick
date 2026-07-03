@@ -3,7 +3,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { router } from "expo-router";
 
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import { defaultSpacing } from "@/theme/spacing";
 
 import { AppText } from "./AppText";
 
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 32,
     justifyContent: "center",
-    marginBottom: spacing[6]
+    marginBottom: defaultSpacing
   },
   back: {
     alignItems: "center",

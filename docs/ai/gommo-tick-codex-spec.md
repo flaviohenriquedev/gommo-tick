@@ -97,11 +97,11 @@ src/
 ├── features/
 │   ├── auth/
 │   ├── home/
-│   ├── ponto/
-│   ├── espelho/
-│   ├── banco-horas/
-│   ├── solicitacoes/
-│   └── perfil/
+│   ├── time-clock/
+│   ├── timesheet/
+│   ├── hour-balance/
+│   ├── requests/
+│   └── profile/
 │
 ├── hooks/
 ├── services/
@@ -208,6 +208,8 @@ Valores:
 - 64
 
 Nunca utilizar valores aleatórios.
+
+O espaçamento padrão entre componentes, margins e gaps é `defaultSpacing`, equivalente a `spacing[3]` / 12px. Paddings estruturais de telas, cards e containers podem usar valores maiores quando precisarem de respiro visual. Valores maiores ou menores devem ser exceções intencionais para hierarquia visual, hero sections, agrupamentos compactos ou áreas que precisem de mais respiro.
 
 ---
 

@@ -10,3 +10,5 @@ export const spacing = {
   12: 48,
   16: 64
 } as const;
+
+export const defaultSpacing = spacing[3];
