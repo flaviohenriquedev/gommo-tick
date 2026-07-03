@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Gommo Tick Web",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:8090",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Gommo Tick: start web",
+      "sourceMaps": true
+    },
+    {
+      "name": "Debug Gommo Tick Web (Chrome)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:8090",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Gommo Tick: start web",
+      "sourceMaps": true
+    }
+  ]
+}

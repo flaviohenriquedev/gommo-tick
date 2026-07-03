@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Gommo Tick: start",
+      "type": "shell",
+      "command": "npm.cmd",
+      "args": ["run", "start"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "expo",
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting project",
+          "endsPattern": "Waiting on http://localhost:8090|Metro waiting"
+        }
+      }
+    },
+    {
+      "label": "Gommo Tick: start web",
+      "type": "shell",
+      "command": "npm.cmd",
+      "args": ["run", "web"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "expo",
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting project",
+          "endsPattern": "Waiting on http://localhost:8090|Web is waiting"
+        }
+      }
+    }
+  ]
+}

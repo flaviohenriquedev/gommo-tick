@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Gommo Tick",
+    "slug": "gommo-tick",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "gommo-tick",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.gommo.tick",
+      "adaptiveIcon": {
+        "backgroundColor": "#6d28d9"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permita que o Gommo Tick use a camera para validar o registro de ponto."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
