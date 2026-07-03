@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "gommo-tick",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false
     },

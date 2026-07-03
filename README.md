@@ -4,7 +4,7 @@ App mobile Expo/React Native.
 
 ## Expo Go
 
-O projeto esta fixado no Expo SDK `56` para abrir no Expo Go disponivel publicamente na Play Store.
+O projeto esta alinhado ao Expo SDK `57`, que e o SDK atual suportado pelo Expo Go publico. Mantenha o app Expo Go do celular atualizado.
 
 ## Porta padrao
 
@@ -40,24 +40,30 @@ npm.cmd run phone:web
 No celular, abra o navegador em:
 
 ```text
-http://192.168.1.167:8090
+http://SEU_IP_LOCAL:8090
 ```
 
 O celular precisa estar no mesmo Wi-Fi do computador.
 
-### Via cabo USB no navegador do celular
+### Via cabo USB com Expo Go
 
-Com Android Debug Bridge instalado e depuracao USB ativada no celular:
+Use este fluxo quando o computador estiver na rede cabeada e o celular no Wi-Fi:
 
 ```powershell
-npm.cmd run web
-npm.cmd run phone:usb:reverse
+npm.cmd run phone:usb:clear
+npm.cmd run phone:usb:connect
 ```
 
-Depois abra no navegador do celular:
+A URL aberta no Expo Go e:
 
 ```text
-http://127.0.0.1:8090
+exp://127.0.0.1:8090/--/
+```
+
+Se o servidor ja estiver rodando e voce so reconectou o cabo, rode novamente apenas:
+
+```powershell
+npm.cmd run phone:usb:connect
 ```
 
 ### Expo Go
@@ -69,6 +75,12 @@ npm.cmd run phone
 ```
 
 Depois escaneie o QR Code pelo app Expo Go.
+
+Se precisar limpar cache em LAN, use:
+
+```powershell
+npm.cmd run phone:clear
+```
 
 Se a rede local bloquear a conexao, tente o tunel:
 
