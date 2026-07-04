@@ -1,205 +1,252 @@
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { CalendarClock, Clock3, FilePenLine, Plus } from "lucide-react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import {useState} from "react";
+import {Pressable, View} from "react-native";
+import * as Haptics from "expo-haptics";
+import {CalendarClock, Clock3, FilePenLine, MessageSquareText, Pencil, Plus} from "lucide-react-native";
 
-import { AppText } from "@/components/ui/AppText";
-import { AppModal } from "@/components/ui/AppModal";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Header } from "@/components/ui/Header";
-import { Screen } from "@/components/ui/Screen";
-import { StatusPill } from "@/components/ui/StatusPill";
-import { requests } from "@/data/mock";
-import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import {Card} from "@/components/system/card/Card";
+import {FormScreen} from "@/components/system/form-screen/FormScreen";
+import {Header} from "@/components/system/header/Header";
+import {AppModal} from "@/components/system/modal/AppModal";
+import {Screen} from "@/components/system/screen/Screen";
+import {StatusPill} from "@/components/system/status-pill/StatusPill";
+import {AppText} from "@/components/system/typography/AppText";
+import {Button} from "@/components/ui/action/button/Button";
+import {
+    AppDateInput,
+    AppFileInput,
+    AppInput,
+    AppTextarea,
+    type AppFileInputValue
+} from "@/components/ui/data-input/input";
+import {requests} from "@/data/mock";
+import {colors} from "@/theme/colors";
+
+const requestToneColor = {
+    success: colors.success,
+    warning: colors.warning,
+    error: colors.error
+} as const;
 
 type RequestsScreenProps = {
-  primaryTabLabel?: string;
-  title?: string;
+    primaryTabLabel?: string;
+    title?: string;
 };
 
-export function RequestsScreen({
-  primaryTabLabel = "Minhas Solicitações",
-  title = "Solicitações"
-}: RequestsScreenProps) {
-  const [isRequestModalVisible, setRequestModalVisible] = useState(false);
+type RequestTypeId = "time-adjustment" | "hour-bank" | "other";
 
-  return (
-    <Screen backgroundColor={colors.surface}>
-      <Header title={title} />
-      <View style={styles.segmented}>
-        <View style={styles.segmentActive}>
-          <AppText color={colors.primary} style={styles.segmentText}>
-            {primaryTabLabel}
-          </AppText>
-        </View>
-        <View style={styles.segment}>
-          <AppText variant="label">Histórico</AppText>
-        </View>
-      </View>
+type RequestType = {
+    description: string;
+    detailsLabel: string;
+    detailsPlaceholder: string;
+    icon: typeof Clock3;
+    id: RequestTypeId;
+    title: string;
+};
 
-      <Card style={styles.list}>
-        {requests.map((request) => (
-          <View key={`${request.title}-${request.date}`} style={styles.row}>
-            <View style={styles.requestInfo}>
-              <View style={[styles.requestDot, styles[request.tone]]} />
-              <View>
-                <AppText style={styles.rowTitle}>{request.title}</AppText>
-                <AppText variant="label">{request.date}</AppText>
-              </View>
+const requestTypes: RequestType[] = [
+    {
+        description: "Corrigir entrada, saída ou intervalo.",
+        detailsLabel: "O que precisa ser ajustado?",
+        detailsPlaceholder: "Ex.: esqueci de registrar a saída às 17:00.",
+        icon: Clock3,
+        id: "time-adjustment",
+        title: "Ajuste de ponto"
+    },
+    {
+        description: "Solicitar compensação ou conferência.",
+        detailsLabel: "Qual ajuste deseja solicitar?",
+        detailsPlaceholder: "Ex.: compensar 2 horas no dia 10/07.",
+        icon: CalendarClock,
+        id: "hour-bank",
+        title: "Banco de horas"
+    },
+    {
+        description: "Enviar uma solicitação manual.",
+        detailsLabel: "Descreva sua solicitação",
+        detailsPlaceholder: "Inclua as informações necessárias para o RH analisar.",
+        icon: FilePenLine,
+        id: "other",
+        title: "Outro pedido"
+    }
+];
+
+export function RequestsScreen({primaryTabLabel = "Minhas Solicitações", title = "Solicitações"}: RequestsScreenProps) {
+    const [isRequestModalVisible, setRequestModalVisible] = useState(false);
+    const [selectedRequestTypeId, setSelectedRequestTypeId] = useState<RequestTypeId | null>(null);
+    const [isRequestFormVisible, setRequestFormVisible] = useState(false);
+    const [requestDate, setRequestDate] = useState("");
+    const [attachment, setAttachment] = useState<AppFileInputValue | null>(null);
+    const [attachmentType, setAttachmentType] = useState("");
+    const selectedRequestType = requestTypes.find((requestType) => requestType.id === selectedRequestTypeId);
+
+    const resetRequestDraft = () => {
+        setSelectedRequestTypeId(null);
+        setRequestDate("");
+        setAttachment(null);
+        setAttachmentType("");
+    };
+
+    const openRequestModal = () => {
+        resetRequestDraft();
+        setRequestModalVisible(true);
+    };
+
+    const openRequestTypeEditor = () => {
+        setRequestModalVisible(true);
+    };
+
+    const selectRequestType = (requestTypeId: RequestTypeId) => {
+        Haptics.selectionAsync();
+        setSelectedRequestTypeId(requestTypeId);
+    };
+
+    const continueToRequestForm = () => {
+        if (!selectedRequestTypeId) return;
+
+        setRequestModalVisible(false);
+        setRequestFormVisible(true);
+    };
+
+    const closeRequestForm = () => {
+        setRequestFormVisible(false);
+        resetRequestDraft();
+    };
+
+    const renderRequestTypeModal = () => (
+        <AppModal onClose={() => setRequestModalVisible(false)}
+                  visible={isRequestModalVisible}>
+            <View className="gap-3 p-4">
+                {requestTypes.map((requestType) => {
+                    const Icon = requestType.icon;
+                    const isSelected = selectedRequestTypeId === requestType.id;
+
+                    return (
+                        <Pressable
+                            accessibilityRole="button"
+                            className="min-h-[72px] w-full flex-row items-center gap-3 rounded-[18px] border p-3"
+                            key={requestType.id}
+                            onPress={() => selectRequestType(requestType.id)}
+                            style={{
+                                backgroundColor: isSelected ? colors.primarySoft : "#faf8ff",
+                                borderColor: isSelected ? colors.primary : colors.border
+                            }}
+                        >
+                            <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
+                                <Icon color={colors.primary} size={20}/>
+                            </View>
+                            <View>
+                                <AppText className="font-inter-extrabold" color={colors.text}>
+                                    {requestType.title}
+                                </AppText>
+                                <AppText className="mt-1 font-inter-semibold text-xs leading-4" color={colors.muted}>
+                                    {requestType.description}
+                                </AppText>
+                            </View>
+                        </Pressable>
+                    );
+                })}
+                <Button disabled={!selectedRequestTypeId} label="Continuar" onPress={continueToRequestForm}/>
             </View>
-            <StatusPill label={request.status} tone={request.tone} />
-          </View>
-        ))}
-      </Card>
+        </AppModal>
+    );
 
-      <Button
-        label="Nova Solicitação"
-        onPress={() => setRequestModalVisible(true)}
-        style={styles.action}
-      />
-      <View pointerEvents="none" style={styles.plusIcon}>
-        <Plus color={colors.surface} size={18} />
-      </View>
+    if (isRequestFormVisible && selectedRequestType) {
+        const SelectedRequestIcon = selectedRequestType.icon;
 
-      <AppModal
-        onClose={() => setRequestModalVisible(false)}
-        title="Nova Solicitação"
-        visible={isRequestModalVisible}
-      >
-        <AppText variant="label">Escolha o tipo de solicitação que deseja abrir.</AppText>
+        return (
+            <>
+                <FormScreen actionLabel="Enviar solicitação" onAction={closeRequestForm} onBack={closeRequestForm}
+                            title="Nova Solicitação">
+                    <Pressable
+                        accessibilityRole="button"
+                        className="w-full"
+                        onPress={openRequestTypeEditor}
+                        style={({pressed}) => (pressed ? {opacity: 0.72, transform: [{scale: 0.99}]} : null)}
+                    >
+                        <Card className="w-full flex-row items-center gap-3 p-4">
+                            <View className="h-11 w-11 items-center justify-center rounded-button bg-primarySoft">
+                                <SelectedRequestIcon color={colors.primary} size={22}/>
+                            </View>
+                            <View className="min-w-0 flex-1 gap-1">
+                                <AppText className="font-inter-extrabold">{selectedRequestType.title}</AppText>
+                                <AppText variant="label">{selectedRequestType.description}</AppText>
+                            </View>
+                            <View className="h-8 w-8 items-center justify-center rounded-2xl bg-primarySoft">
+                                <Pencil color={colors.primary} size={18}/>
+                            </View>
+                        </Card>
+                    </Pressable>
 
-        <View style={styles.modalOptions}>
-          <Animated.View entering={FadeInUp.delay(80).duration(260)} style={styles.modalOption}>
-            <View style={styles.modalIcon}>
-              <Clock3 color={colors.primary} size={20} />
-            </View>
-            <View style={styles.modalText}>
-              <AppText style={styles.modalTitle}>Ajuste de ponto</AppText>
-              <AppText variant="label">Corrigir entrada, saída ou intervalo.</AppText>
-            </View>
-          </Animated.View>
+                    <AppDateInput label="Data da solicitação" onChange={setRequestDate} placeholder="Selecione a data"
+                                  value={requestDate}/>
 
-          <Animated.View entering={FadeInUp.delay(130).duration(260)} style={styles.modalOption}>
-            <View style={styles.modalIcon}>
-              <CalendarClock color={colors.primary} size={20} />
-            </View>
-            <View style={styles.modalText}>
-              <AppText style={styles.modalTitle}>Banco de horas</AppText>
-              <AppText variant="label">Solicitar compensação ou conferência.</AppText>
-            </View>
-          </Animated.View>
+                    <AppTextarea label={selectedRequestType.detailsLabel}
+                                 placeholder={selectedRequestType.detailsPlaceholder}/>
 
-          <Animated.View entering={FadeInUp.delay(180).duration(260)} style={styles.modalOption}>
-            <View style={styles.modalIcon}>
-              <FilePenLine color={colors.primary} size={20} />
-            </View>
-            <View style={styles.modalText}>
-              <AppText style={styles.modalTitle}>Outro pedido</AppText>
-              <AppText variant="label">Enviar uma solicitação manual.</AppText>
-            </View>
-          </Animated.View>
-        </View>
+                    <AppInput
+                        label="Tipo de arquivo"
+                        onChangeText={setAttachmentType}
+                        placeholder="Ex.: Atestado, declaração, comprovante"
+                        value={attachmentType}
+                    />
 
-        <Button label="Continuar" onPress={() => setRequestModalVisible(false)} />
-      </AppModal>
-    </Screen>
-  );
+                    <AppFileInput label="Anexo" onChange={setAttachment} placeholder="Selecionar arquivo"
+                                  value={attachment}/>
+
+                    <Card className="flex-row items-center gap-3 bg-[#faf8ff] p-4">
+                        <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
+                            <MessageSquareText color={colors.primary} size={20}/>
+                        </View>
+                        <View className="min-w-0 flex-1 gap-1">
+                            <AppText className="font-inter-extrabold">Análise do RH</AppText>
+                            <AppText variant="label">
+                                Sua solicitação será enviada para conferência e acompanhamento no histórico.
+                            </AppText>
+                        </View>
+                    </Card>
+                </FormScreen>
+                {renderRequestTypeModal()}
+            </>
+        );
+    }
+
+    return (
+        <Screen backgroundColor={colors.surface}>
+            <Header title={title}/>
+            <View className="flex-row border-b border-[#eeeaf5]">
+                <View className="flex-1 items-center border-b-2 border-primary py-3">
+                    <AppText className="font-inter-extrabold" color={colors.primary}>
+                        {primaryTabLabel}
+                    </AppText>
+                </View>
+                <View className="flex-1 items-center py-3">
+                    <AppText variant="label">Histórico</AppText>
+                </View>
+            </View>
+
+            <Card className="mt-5 py-1">
+                {requests.map((request) => (
+                    <View className="flex-row items-center justify-between border-b border-[#f2eff7] py-4"
+                          key={`${request.title}-${request.date}`}>
+                        <View className="flex-row items-center gap-3">
+                            <View className="h-3 w-3 rounded-md"
+                                  style={{backgroundColor: requestToneColor[request.tone]}}/>
+                            <View>
+                                <AppText className="font-inter-extrabold">{request.title}</AppText>
+                                <AppText variant="label">{request.date}</AppText>
+                            </View>
+                        </View>
+                        <StatusPill label={request.status} tone={request.tone}/>
+                    </View>
+                ))}
+            </Card>
+
+            <Button className="mt-8" label="Nova Solicitação" onPress={openRequestModal}/>
+            <View className="left-6 top-[-36px] h-0 w-6 items-center justify-center" pointerEvents="none">
+                <Plus color={colors.surface} size={18}/>
+            </View>
+
+            {renderRequestTypeModal()}
+        </Screen>
+    );
 }
-
-const styles = StyleSheet.create({
-  segmented: {
-    borderBottomColor: "#eeeaf5",
-    borderBottomWidth: 1,
-    flexDirection: "row"
-  },
-  segment: {
-    alignItems: "center",
-    flex: 1,
-    paddingVertical: spacing[3]
-  },
-  segmentActive: {
-    alignItems: "center",
-    borderBottomColor: colors.primary,
-    borderBottomWidth: 2,
-    flex: 1,
-    paddingVertical: spacing[3]
-  },
-  segmentText: {
-    fontWeight: "900"
-  },
-  list: {
-    marginTop: spacing[5],
-    paddingVertical: spacing[1]
-  },
-  row: {
-    alignItems: "center",
-    borderBottomColor: "#f2eff7",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: spacing[4]
-  },
-  requestInfo: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3]
-  },
-  requestDot: {
-    borderRadius: 6,
-    height: 12,
-    width: 12
-  },
-  success: {
-    backgroundColor: colors.success
-  },
-  warning: {
-    backgroundColor: colors.warning
-  },
-  error: {
-    backgroundColor: colors.error
-  },
-  rowTitle: {
-    fontWeight: "800"
-  },
-  action: {
-    marginTop: spacing[8]
-  },
-  plusIcon: {
-    alignItems: "center",
-    height: 0,
-    justifyContent: "center",
-    left: spacing[6],
-    top: -36,
-    width: 24
-  },
-  modalOptions: {
-    gap: spacing[3]
-  },
-  modalOption: {
-    alignItems: "center",
-    backgroundColor: "#faf8ff",
-    borderColor: colors.border,
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing[3],
-    padding: spacing[3]
-  },
-  modalIcon: {
-    alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderRadius: 18,
-    height: 36,
-    justifyContent: "center",
-    width: 36
-  },
-  modalText: {
-    flex: 1,
-    gap: spacing[1]
-  },
-  modalTitle: {
-    fontWeight: "900"
-  }
-});

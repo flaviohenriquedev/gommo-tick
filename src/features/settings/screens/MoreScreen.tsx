@@ -1,80 +1,46 @@
-import { Pressable, StyleSheet, View } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import {Pressable, View} from "react-native";
+import {ChevronRight} from "lucide-react-native";
 
-import { AppText } from "@/components/ui/AppText";
-import { Card } from "@/components/ui/Card";
-import { Header } from "@/components/ui/Header";
-import { Screen } from "@/components/ui/Screen";
-import { settingsItems } from "@/data/mock";
-import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+import {Card} from "@/components/system/card/Card";
+import {Header} from "@/components/system/header/Header";
+import {Screen} from "@/components/system/screen/Screen";
+import {AppText} from "@/components/system/typography/AppText";
+import {settingsItems} from "@/data/mock";
+import {colors} from "@/theme/colors";
 
 export function MoreScreen() {
-  return (
-    <Screen backgroundColor={colors.surface}>
-      <Header title="Mais" />
-      <AppText variant="label" style={styles.section}>
-        OPÇÕES
-      </AppText>
-      <Card style={styles.card}>
-        {settingsItems.map(({ label, value, icon: Icon }) => (
-          <Pressable key={label} style={({ pressed }) => [styles.row, pressed ? styles.rowPressed : null]}>
-            <View style={styles.rowLabel}>
-              <Icon color={colors.primary} size={20} />
-              <AppText>{label}</AppText>
-            </View>
-            <View style={styles.rowValue}>
-              {value ? <AppText variant="label">{value}</AppText> : null}
-              <ChevronRight color={colors.muted} size={18} />
-            </View>
-          </Pressable>
-        ))}
-      </Card>
+    return (
+        <Screen backgroundColor={colors.surface}>
+            <Header title="Mais"/>
+            <AppText className="mb-2 mt-5" variant="label">
+                OPÇÕES
+            </AppText>
+            <Card className="py-2">
+                {settingsItems.map(({label, value, icon: Icon}) => (
+                    <Pressable
+                        className="flex-row items-center justify-between border-b border-[#f2eff7] py-4"
+                        key={label}
+                        style={({pressed}) => (pressed ? {opacity: 0.68, transform: [{scale: 0.99}]} : null)}
+                    >
+                        <View className="flex-row items-center gap-3">
+                            <Icon color={colors.primary} size={20}/>
+                            <AppText>{label}</AppText>
+                        </View>
+                        <View className="flex-row items-center gap-1">
+                            {value ? <AppText variant="label">{value}</AppText> : null}
+                            <ChevronRight color={colors.muted} size={18}/>
+                        </View>
+                    </Pressable>
+                ))}
+            </Card>
 
-      <AppText variant="label" style={styles.section}>
-        SOBRE
-      </AppText>
-      <Card style={styles.version}>
-        <AppText>Versão do App</AppText>
-        <AppText variant="label">1.0.0</AppText>
-      </Card>
-    </Screen>
-  );
+            <AppText className="mb-2 mt-5" variant="label">
+                SOBRE
+            </AppText>
+            <Card className="flex-row items-center justify-between">
+                <AppText>Versão do App</AppText>
+                <AppText variant="label">1.0.0</AppText>
+            </Card>
+        </Screen>
+    );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: spacing[2],
-    marginTop: spacing[5]
-  },
-  card: {
-    paddingVertical: spacing[2]
-  },
-  row: {
-    alignItems: "center",
-    borderBottomColor: "#f2eff7",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: spacing[4]
-  },
-  rowPressed: {
-    opacity: 0.68,
-    transform: [{ scale: 0.99 }]
-  },
-  rowLabel: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3]
-  },
-  rowValue: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[1]
-  },
-  version: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  }
-});

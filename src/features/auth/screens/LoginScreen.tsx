@@ -1,17 +1,16 @@
-import { StyleSheet, TextInput, View } from "react-native";
-import { Eye, Fingerprint } from "lucide-react-native";
-import { router } from "expo-router";
-import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
+import { View } from "react-native";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { router } from "expo-router";
+import { Fingerprint } from "lucide-react-native";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
-import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
-import { Screen } from "@/components/ui/Screen";
+import { Screen } from "@/components/system/screen/Screen";
+import { AppText } from "@/components/system/typography/AppText";
+import { Button } from "@/components/ui/action/button/Button";
+import { AppEmailInput, AppPasswordInput } from "@/components/ui/data-input/input";
 import { useAuthStore } from "@/store/authStore";
 import { colors } from "@/theme/colors";
-import { radius } from "@/theme/radius";
-import { spacing } from "@/theme/spacing";
 
 const loginSchema = z.object({
   identifier: z.string().min(3, "Informe seu e-mail ou CPF"),
@@ -23,11 +22,11 @@ type LoginForm = z.infer<typeof loginSchema>;
 export function LoginScreen() {
   const signIn = useAuthStore((state) => state.signIn);
   const { control, handleSubmit } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
     defaultValues: {
       identifier: "seu@email.com",
       password: "123456"
-    }
+    },
+    resolver: zodResolver(loginSchema)
   });
 
   const onSubmit = () => {
@@ -36,170 +35,63 @@ export function LoginScreen() {
   };
 
   return (
-    <Screen scroll={false} backgroundColor={colors.surface}>
-      <View style={styles.container}>
-        <View style={styles.brand}>
-          <AppText style={styles.logo}>gommo</AppText>
-          <AppText style={styles.logoAccent}>tick</AppText>
+    <Screen backgroundColor={colors.surface} scroll={false}>
+      <View className="flex-1 justify-center py-6">
+        <View className="mb-10 items-center">
+          <AppText className="font-inter-extrabold text-4xl leading-[38px] tracking-[-1.2px]">gommo</AppText>
+          <AppText className="font-inter-extrabold text-4xl leading-[38px] tracking-[-1.2px] text-primary">
+            tick
+          </AppText>
         </View>
 
-        <View style={styles.copy}>
-          <AppText variant="title" center>
+        <View className="mb-10 gap-2">
+          <AppText center variant="title">
             Bem-vindo(a)!
           </AppText>
-          <AppText variant="subtitle" center>
+          <AppText center variant="subtitle">
             Acesse sua conta para continuar
           </AppText>
         </View>
 
-        <View style={styles.form}>
-          <AppText variant="label" color={colors.text}>
-            E-mail ou CPF
-          </AppText>
+        <View className="gap-2">
           <Controller
             control={control}
             name="identifier"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                autoCapitalize="none"
-                keyboardType="email-address"
-                onChangeText={onChange}
-                placeholder="seu@email.com"
-                placeholderTextColor="#9b94aa"
-                style={styles.input}
-                value={value}
-              />
+              <AppEmailInput label="E-mail ou CPF" onChangeText={onChange} placeholder="seu@email.com" value={value} />
             )}
           />
 
-          <AppText variant="label" color={colors.text} style={styles.passwordLabel}>
-            Senha
-          </AppText>
-          <View style={styles.passwordField}>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  onChangeText={onChange}
-                  placeholder="Sua senha"
-                  placeholderTextColor="#9b94aa"
-                  secureTextEntry
-                  style={styles.passwordInput}
-                  value={value}
-                />
-              )}
-            />
-            <Eye color={colors.muted} size={20} />
-          </View>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <AppPasswordInput containerClassName="mt-3" label="Senha" onChangeText={onChange} placeholder="Sua senha" value={value} />
+            )}
+          />
 
-          <AppText variant="label" color={colors.primary} style={styles.forgot}>
+          <AppText className="mb-3 mt-1 self-end" color={colors.primary} variant="label">
             Esqueceu sua senha?
           </AppText>
 
           <Button label="Entrar" onPress={handleSubmit(onSubmit)} />
 
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
+          <View className="my-3 flex-row items-center gap-3">
+            <View className="h-px flex-1 bg-[#edeaf3]" />
             <AppText variant="label">ou</AppText>
-            <View style={styles.divider} />
+            <View className="h-px flex-1 bg-[#edeaf3]" />
           </View>
 
           <Button label="Entrar com biometria" onPress={onSubmit} variant="secondary" />
-          <View style={styles.biometryIcon}>
+          <View className="left-6 top-[-36px] h-0 w-6 items-center justify-center">
             <Fingerprint color={colors.primary} size={20} />
           </View>
         </View>
 
-        <AppText variant="label" center style={styles.footer}>
-          Nao tem uma conta? <AppText color={colors.primary}>Fale com seu RH</AppText>
+        <AppText center className="mt-auto" variant="label">
+          Não tem uma conta? <AppText color={colors.primary}>Fale com seu RH</AppText>
         </AppText>
       </View>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingVertical: spacing[6]
-  },
-  brand: {
-    alignItems: "center",
-    marginBottom: spacing[10]
-  },
-  logo: {
-    fontSize: 36,
-    fontWeight: "900",
-    letterSpacing: -1.2,
-    lineHeight: 38
-  },
-  logoAccent: {
-    color: colors.primary,
-    fontSize: 36,
-    fontWeight: "900",
-    letterSpacing: -1.2,
-    lineHeight: 38
-  },
-  copy: {
-    gap: spacing[2],
-    marginBottom: spacing[10]
-  },
-  form: {
-    gap: spacing[2]
-  },
-  input: {
-    borderColor: colors.border,
-    borderRadius: radius.input,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 15,
-    height: 52,
-    paddingHorizontal: spacing[4]
-  },
-  passwordLabel: {
-    marginTop: spacing[3]
-  },
-  passwordField: {
-    alignItems: "center",
-    borderColor: colors.border,
-    borderRadius: radius.input,
-    borderWidth: 1,
-    flexDirection: "row",
-    height: 52,
-    paddingHorizontal: spacing[4]
-  },
-  passwordInput: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15
-  },
-  forgot: {
-    alignSelf: "flex-end",
-    marginBottom: spacing[3],
-    marginTop: spacing[1]
-  },
-  dividerRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3],
-    marginVertical: spacing[3]
-  },
-  divider: {
-    backgroundColor: "#edeaf3",
-    flex: 1,
-    height: StyleSheet.hairlineWidth
-  },
-  biometryIcon: {
-    alignItems: "center",
-    height: 0,
-    justifyContent: "center",
-    left: spacing[6],
-    top: -36,
-    width: 24
-  },
-  footer: {
-    marginTop: "auto"
-  }
-});

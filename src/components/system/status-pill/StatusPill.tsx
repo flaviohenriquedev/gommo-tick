@@ -1,10 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
 import { colors } from "@/theme/colors";
-import { radius } from "@/theme/radius";
-import { spacing } from "@/theme/spacing";
 
-import { AppText } from "./AppText";
+import { AppText } from "../typography/AppText";
 
 type PillTone = "success" | "warning" | "error" | "neutral";
 
@@ -24,18 +22,10 @@ export function StatusPill({ label, tone = "neutral" }: StatusPillProps) {
   const colorSet = toneMap[tone];
 
   return (
-    <View style={[styles.pill, { backgroundColor: colorSet.backgroundColor }]}>
-      <AppText variant="label" color={colorSet.color}>
+    <View className="rounded-full px-3 py-1" style={{ backgroundColor: colorSet.backgroundColor }}>
+      <AppText color={colorSet.color} variant="label">
         {label}
       </AppText>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1]
-  }
-});

@@ -1,93 +1,52 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Camera } from "lucide-react-native";
 
-import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Header } from "@/components/ui/Header";
-import { Screen } from "@/components/ui/Screen";
+import { Card } from "@/components/system/card/Card";
+import { Header } from "@/components/system/header/Header";
+import { Screen } from "@/components/system/screen/Screen";
+import { AppText } from "@/components/system/typography/AppText";
+import { Button } from "@/components/ui/action/button/Button";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
 import { todayLabel } from "@/utils/date";
 
 export function RegisterPointScreen() {
   return (
-    <Screen scroll={false} backgroundColor={colors.surface}>
+    <Screen backgroundColor={colors.surface} scroll={false}>
       <Header title="Registrar Ponto" />
-      <AppText variant="clock" center>
+      <AppText center variant="clock">
         09:30:45
       </AppText>
-      <AppText variant="subtitle" center>
+      <AppText center variant="subtitle">
         {todayLabel}
       </AppText>
-      <AppText style={styles.status} center>
+      <AppText center className="mt-2 font-inter-extrabold text-success">
         Dentro do horário
       </AppText>
 
-      <View style={styles.cameraCircle}>
+      <View className="mt-12 h-44 w-44 items-center justify-center self-center rounded-[88px] border-[3px] border-[#8b5cf6] bg-[#faf7ff]">
         <Camera color={colors.primary} size={52} strokeWidth={1.8} />
       </View>
-      <AppText style={styles.selfie} center>
+      <AppText center className="mt-6 font-inter-extrabold text-lg text-primary">
         Tire uma selfie
       </AppText>
-      <AppText variant="subtitle" center>
+      <AppText center variant="subtitle">
         para confirmar seu ponto
       </AppText>
 
-      <Card style={styles.lastCard}>
+      <Card className="mt-auto flex-row items-end justify-between">
         <View>
-          <AppText variant="label" color={colors.text}>
+          <AppText color={colors.text} variant="label">
             Último registro
           </AppText>
-          <AppText variant="label" color={colors.success}>
+          <AppText color={colors.success} variant="label">
             Entrada
           </AppText>
-          <AppText style={styles.lastTime}>08:00</AppText>
+          <AppText className="font-inter-extrabold text-[23px] leading-7">08:00</AppText>
         </View>
         <AppText variant="subtitle">Hoje</AppText>
       </Card>
 
-      <Button label="Registrar Entrada" onPress={() => undefined} style={styles.action} />
+      <Button className="mt-4" label="Registrar Entrada" onPress={() => undefined} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  status: {
-    color: colors.success,
-    fontWeight: "800",
-    marginTop: spacing[2]
-  },
-  cameraCircle: {
-    alignItems: "center",
-    alignSelf: "center",
-    backgroundColor: "#faf7ff",
-    borderColor: "#8b5cf6",
-    borderRadius: 88,
-    borderWidth: 3,
-    height: 176,
-    justifyContent: "center",
-    marginTop: spacing[12],
-    width: 176
-  },
-  selfie: {
-    color: colors.primary,
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: spacing[6]
-  },
-  lastCard: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: "auto"
-  },
-  lastTime: {
-    fontSize: 23,
-    fontWeight: "900",
-    lineHeight: 28
-  },
-  action: {
-    marginTop: spacing[4]
-  }
-});

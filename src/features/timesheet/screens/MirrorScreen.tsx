@@ -1,106 +1,48 @@
-import { StyleSheet, View } from "react-native";
-import { CalendarDays } from "lucide-react-native";
+import { View } from "react-native";
 
-import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Header } from "@/components/ui/Header";
-import { MetricCard } from "@/components/ui/MetricCard";
-import { Screen } from "@/components/ui/Screen";
+import { Button } from "@/components/ui/action/button/Button";
+import { Card } from "@/components/system/card/Card";
+import { Header } from "@/components/system/header/Header";
+import { MetricCard } from "@/components/system/metric-card/MetricCard";
+import { Screen } from "@/components/system/screen/Screen";
+import { AppText } from "@/components/system/typography/AppText";
+import { AppDateInput } from "@/components/ui/data-input/input";
 import { mirrorDays } from "@/data/mock";
 import { colors } from "@/theme/colors";
-import { radius } from "@/theme/radius";
-import { spacing } from "@/theme/spacing";
 import { periodLabel } from "@/utils/date";
 
 export function MirrorScreen() {
   return (
     <Screen backgroundColor={colors.surface}>
       <Header title="Espelho de Ponto" />
-      <View style={styles.datePicker}>
-        <AppText style={styles.dateText}>{periodLabel}</AppText>
-        <CalendarDays color={colors.primary} size={18} />
-      </View>
+      <AppDateInput value={periodLabel} />
 
-      <View style={styles.metricRow}>
+      <View className="mt-5 flex-row gap-3">
         <MetricCard label="Total no período" value="176h00" />
-        <MetricCard label="Banco de horas" value="+08h30" accent={colors.success} />
+        <MetricCard accent={colors.success} label="Banco de horas" value="+08h30" />
       </View>
 
-      <Card style={styles.list}>
+      <Card className="mt-3 gap-3">
         {mirrorDays.map((day) => (
-          <View key={day.day} style={styles.barRow}>
-            <AppText variant="label" color={colors.text} style={styles.day}>
+          <View className="flex-row items-center gap-3" key={day.day}>
+            <AppText className="w-20" color={colors.text} variant="label">
               {day.day}
             </AppText>
-            <View style={styles.barTrack}>
+            <View className="h-[9px] flex-1 overflow-hidden rounded-button bg-[#f0edf5]">
               <View
-                style={[
-                  styles.barFill,
-                  {
-                    width: `${day.progress}%`,
-                    backgroundColor: day.tone === "warning" ? "#f4be2a" : "#4cc26f"
-                  }
-                ]}
+                className="h-full rounded-button"
+                style={{
+                  backgroundColor: day.tone === "warning" ? "#f4be2a" : "#4cc26f",
+                  width: `${day.progress}%`
+                }}
               />
             </View>
-            <AppText style={styles.hours}>{day.hours}</AppText>
+            <AppText className="w-14 font-inter-extrabold">{day.hours}</AppText>
           </View>
         ))}
       </Card>
 
-      <Button label="Ver detalhes do dia" onPress={() => undefined} variant="secondary" style={styles.action} />
+      <Button className="mt-8" label="Ver detalhes do dia" onPress={() => undefined} variant="secondary" />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  datePicker: {
-    alignItems: "center",
-    borderColor: "#eeeaf5",
-    borderRadius: radius.input,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing[3],
-    height: 52,
-    justifyContent: "center"
-  },
-  dateText: {
-    fontWeight: "800"
-  },
-  metricRow: {
-    flexDirection: "row",
-    gap: spacing[3],
-    marginTop: spacing[5]
-  },
-  list: {
-    gap: spacing[3],
-    marginTop: spacing[3]
-  },
-  barRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3]
-  },
-  day: {
-    width: 80
-  },
-  barTrack: {
-    backgroundColor: "#f0edf5",
-    borderRadius: 20,
-    flex: 1,
-    height: 9,
-    overflow: "hidden"
-  },
-  barFill: {
-    borderRadius: 20,
-    height: "100%"
-  },
-  hours: {
-    fontWeight: "900",
-    width: 56
-  },
-  action: {
-    marginTop: spacing[8]
-  }
-});

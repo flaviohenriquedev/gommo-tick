@@ -28,7 +28,8 @@
         "phone:usb": "expo start --go --port 8090",
         "phone:usb:clear": "expo start --go --port 8090 --clear",
         "phone:usb:open": "\"%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe\" shell am start -a android.intent.action.VIEW -d exp://127.0.0.1:8090/--/ host.exp.exponent",
-        "phone:usb:connect": "npm run phone:usb:reverse && npm run phone:usb:open"
+        "phone:usb:connect": "npm run phone:usb:reverse && npm run phone:usb:open",
+        "check:encoding": "node scripts/check-text-encoding.js"
     },
     "dependencies": {
         "@expo-google-fonts/inter": "0.4.2",
@@ -40,6 +41,7 @@
         "expo": "^57.0.2",
         "expo-camera": "~57.0.0",
         "expo-constants": "~57.0.3",
+        "expo-document-picker": "~57.0.0",
         "expo-font": "~57.0.0",
         "expo-haptics": "~57.0.0",
         "expo-image": "~57.0.0",

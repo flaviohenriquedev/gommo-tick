@@ -1,13 +1,19 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { BellRing } from "lucide-react-native";
 
-import { AppText } from "@/components/ui/AppText";
-import { Card } from "@/components/ui/Card";
-import { Header } from "@/components/ui/Header";
-import { Screen } from "@/components/ui/Screen";
+import { Card } from "@/components/system/card/Card";
+import { Header } from "@/components/system/header/Header";
+import { Screen } from "@/components/system/screen/Screen";
+import { AppText } from "@/components/system/typography/AppText";
 import { notifications } from "@/data/mock";
 import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
+
+const dotColor = {
+  success: colors.success,
+  warning: colors.warning,
+  info: colors.info,
+  neutral: colors.muted
+} as const;
 
 export function NotificationsScreen() {
   const unreadCount = notifications.length;
@@ -16,27 +22,27 @@ export function NotificationsScreen() {
     <Screen backgroundColor={colors.surface}>
       <Header title="Notificações" />
 
-      <Card style={styles.summary}>
-        <View style={styles.summaryIcon}>
+      <Card className="flex-row items-center gap-3">
+        <View className="h-11 w-11 items-center justify-center rounded-[22px] bg-primarySoft">
           <BellRing color={colors.primary} size={24} />
         </View>
-        <View style={styles.summaryText}>
-          <AppText style={styles.summaryTitle}>{unreadCount} novas atualizações</AppText>
+        <View className="flex-1 gap-1">
+          <AppText className="font-inter-extrabold">{unreadCount} novas atualizações</AppText>
           <AppText variant="label">Acompanhe avisos importantes sobre sua jornada.</AppText>
         </View>
       </Card>
 
-      <AppText variant="label" style={styles.section}>
+      <AppText className="mb-2 mt-5" variant="label">
         RECENTES
       </AppText>
 
-      <Card style={styles.list}>
+      <Card className="py-1">
         {notifications.map((item) => (
-          <View key={`${item.title}-${item.time}`} style={styles.row}>
-            <View style={[styles.dot, styles[item.tone]]} />
-            <View style={styles.content}>
-              <View style={styles.rowHeader}>
-                <AppText style={styles.title}>{item.title}</AppText>
+          <View className="flex-row gap-3 border-b border-[#f2eff7] py-4" key={`${item.title}-${item.time}`}>
+            <View className="mt-1 h-3 w-3 rounded-md" style={{ backgroundColor: dotColor[item.tone] }} />
+            <View className="flex-1 gap-1">
+              <View className="flex-row items-center justify-between">
+                <AppText className="flex-1 pr-3 font-inter-extrabold">{item.title}</AppText>
                 <AppText variant="label">{item.time}</AppText>
               </View>
               <AppText variant="label">{item.description}</AppText>
@@ -47,72 +53,3 @@ export function NotificationsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  summary: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[3]
-  },
-  summaryIcon: {
-    alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderRadius: 22,
-    height: 44,
-    justifyContent: "center",
-    width: 44
-  },
-  summaryText: {
-    flex: 1,
-    gap: spacing[1]
-  },
-  summaryTitle: {
-    fontWeight: "900"
-  },
-  section: {
-    marginBottom: spacing[2],
-    marginTop: spacing[5]
-  },
-  list: {
-    paddingVertical: spacing[1]
-  },
-  row: {
-    borderBottomColor: "#f2eff7",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: spacing[3],
-    paddingVertical: spacing[4]
-  },
-  dot: {
-    borderRadius: 6,
-    height: 12,
-    marginTop: 4,
-    width: 12
-  },
-  content: {
-    flex: 1,
-    gap: spacing[1]
-  },
-  rowHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  title: {
-    flex: 1,
-    fontWeight: "900",
-    paddingRight: spacing[3]
-  },
-  success: {
-    backgroundColor: colors.success
-  },
-  warning: {
-    backgroundColor: colors.warning
-  },
-  info: {
-    backgroundColor: colors.info
-  },
-  neutral: {
-    backgroundColor: colors.muted
-  }
-});

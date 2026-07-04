@@ -14,3 +14,5 @@ Regras permanentes:
 - Preserve performance, fluidez, componentizacao e UX premium como requisitos centrais.
 - Trate o HTML apenas como mockup de direcao visual.
 - Documente decisoes relevantes quando elas afetarem arquitetura, navegacao, estado, persistencia ou design system.
+- Textos exibidos ao usuario devem ser escritos em UTF-8 normal. Nao grave mojibake em labels, mensagens ou conteudo de UI, e nao use escapes Unicode nesses textos. Antes de finalizar alteracoes com textos, rode `npm run check:encoding`.
+- Para campos de data, use `src/components/ui/InputDate.tsx`; para upload/selecao de arquivos, use `src/components/ui/InputFile.tsx`. Nao recrie inputs especificos para essas finalidades.

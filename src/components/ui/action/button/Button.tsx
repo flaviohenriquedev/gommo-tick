@@ -1,36 +1,39 @@
 import type { PropsWithChildren } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle
-} from "react-native";
+import { Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 import { colors } from "@/theme/colors";
-import { radius } from "@/theme/radius";
-import { spacing } from "@/theme/spacing";
+import { cn } from "@/utils/cn";
 
-import { AppText } from "./AppText";
+import { AppText } from "../../../system/typography/AppText";
 
 type ButtonVariant = "primary" | "secondary" | "danger";
 
 type ButtonProps = PropsWithChildren<
   Omit<PressableProps, "style"> & {
+    className?: string;
     label: string;
     style?: StyleProp<ViewStyle>;
     variant?: ButtonVariant;
   }
 >;
 
-export function Button({ label, variant = "primary", onPress, disabled, style, ...props }: ButtonProps) {
+const variantClassName: Record<ButtonVariant, string> = {
+  primary: "bg-primary shadow-lg",
+  secondary: "border border-[rgba(109,40,217,0.28)] bg-surface",
+  danger: "border border-[rgba(220,38,38,0.24)] bg-surface"
+};
+
+export function Button({
+  className,
+  disabled,
+  label,
+  onPress,
+  style,
+  variant = "primary",
+  ...props
+}: ButtonProps) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -53,6 +56,12 @@ export function Button({ label, variant = "primary", onPress, disabled, style, .
       <Pressable
         {...props}
         android_ripple={{ color: "rgba(255,255,255,0.22)", borderless: false }}
+        className={cn(
+          "h-[52px] items-center justify-center overflow-hidden rounded-button px-5",
+          variantClassName[variant],
+          disabled && "opacity-60",
+          className
+        )}
         disabled={disabled}
         onPress={(event) => {
           Haptics.selectionAsync();
@@ -60,12 +69,12 @@ export function Button({ label, variant = "primary", onPress, disabled, style, .
         }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.base, styles[variant], disabled ? styles.disabled : null, style]}
+        style={style}
       >
-        <View style={styles.content}>
+        <View className="flex-row items-center justify-center gap-2">
           <AppText
-            variant="button"
             color={variant === "primary" ? colors.surface : variant === "danger" ? colors.error : colors.primary}
+            variant="button"
           >
             {label}
           </AppText>
@@ -74,41 +83,3 @@ export function Button({ label, variant = "primary", onPress, disabled, style, .
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    alignItems: "center",
-    borderRadius: radius.button,
-    height: 52,
-    justifyContent: "center",
-    overflow: "hidden",
-    paddingHorizontal: spacing[5]
-  },
-  content: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing[2],
-    justifyContent: "center"
-  },
-  primary: {
-    backgroundColor: colors.primary,
-    shadowColor: "rgba(109, 40, 217, 0.26)",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 3
-  },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderColor: "rgba(109, 40, 217, 0.28)",
-    borderWidth: 1
-  },
-  danger: {
-    backgroundColor: colors.surface,
-    borderColor: "rgba(220, 38, 38, 0.24)",
-    borderWidth: 1
-  },
-  disabled: {
-    opacity: 0.56
-  }
-});
