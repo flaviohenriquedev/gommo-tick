@@ -1,11 +1,11 @@
-import type {ReactNode} from "react";
-import {Pressable, TextInput, View, type StyleProp, type ViewStyle} from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
 
-import {AppText} from "@/components/system/typography/AppText";
-import {colors} from "@/theme/colors";
-import {cn} from "@/utils/cn";
+import { AppText } from "@/components/system/typography/AppText";
+import { colors } from "@/theme/colors";
+import { cn } from "@/utils/cn";
 
-import {AppBaseInput, type AppBaseInputProps, type MaskedInputProps} from "../AppBaseInput";
+import { AppBaseInput, type AppBaseInputProps, type MaskedInputProps } from "../AppBaseInput";
 
 export type PickerInputProps = {
     error?: string;
@@ -35,7 +35,13 @@ export function selectedLabel(options: AppSelectOption[], value?: string) {
     return options.find((option) => option.value === value)?.label ?? "";
 }
 
-export function FieldShell({children, error, helper, label, style}: PickerInputProps & { children: ReactNode }) {
+export function FieldShell({
+    children,
+    error,
+    helper,
+    label,
+    style
+}: PickerInputProps & { children: ReactNode }) {
     return (
         <View className="w-full gap-2" style={style}>
             {label ? (
@@ -56,15 +62,15 @@ export function FieldShell({children, error, helper, label, style}: PickerInputP
 }
 
 export function ReadonlyInput({
-                                  error,
-                                  helper,
-                                  icon,
-                                  label,
-                                  onPress,
-                                  placeholder = "Selecionar",
-                                  style,
-                                  value
-                              }: PickerInputProps & { icon?: ReactNode; onPress: () => void; value?: string }) {
+    error,
+    helper,
+    icon,
+    label,
+    onPress,
+    placeholder = "Selecionar",
+    style,
+    value
+}: PickerInputProps & { icon?: ReactNode; onPress: () => void; value?: string }) {
     return (
         <FieldShell error={error} helper={helper} label={label} style={style}>
             <Pressable
@@ -74,7 +80,7 @@ export function ReadonlyInput({
                     error ? "border-error" : "border-border"
                 )}
                 onPress={onPress}
-                style={({pressed}) => (pressed ? {opacity: 0.72} : null)}
+                style={({ pressed }) => (pressed ? { opacity: 0.72 } : null)}
             >
                 <TextInput
                     caretHidden
@@ -82,7 +88,6 @@ export function ReadonlyInput({
                     editable={false}
                     placeholder={placeholder}
                     placeholderTextColor="#9b94aa"
-                    pointerEvents="none"
                     value={value ?? ""}
                 />
                 {icon}
@@ -92,11 +97,11 @@ export function ReadonlyInput({
 }
 
 export function AppMaskedInput({
-                                   keyboardType = "default",
-                                   mask,
-                                   onChangeText,
-                                   ...props
-                               }: MaskedInputProps & { mask?: (value: string) => string }) {
+    keyboardType = "default",
+    mask,
+    onChangeText,
+    ...props
+}: MaskedInputProps & { mask?: (value: string) => string }) {
     return (
         <AppBaseInput
             {...props}
@@ -106,4 +111,4 @@ export function AppMaskedInput({
     );
 }
 
-export type {AppBaseInputProps, MaskedInputProps};
+export type { AppBaseInputProps, MaskedInputProps };

@@ -11,7 +11,7 @@
         "phone:clear": "expo start --go --lan --port 8090 --clear",
         "phone:web": "expo start --web --host lan --port 8090",
         "phone:web:clear": "expo start --web --host lan --port 8090 --clear",
-        "phone:usb:reverse": "\"%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe\" reverse tcp:8090 tcp:8090",
+        "phone:usb:reverse": "\"%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe\" reverse tcp:8090 tcp:8090 && \"%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe\" reverse tcp:8081 tcp:8081",
         "android": "expo start --android --port 8090",
         "ios": "expo start --ios --port 8090",
         "web": "expo start --web --port 8090",

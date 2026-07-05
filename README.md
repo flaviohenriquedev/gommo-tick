@@ -27,6 +27,16 @@ npx.cmd expo start --web --port 8090
 
 Evite rodar `npx expo start` sem `--port 8090`, porque a CLI do Expo volta para `8081`.
 
+## Backend local
+
+Em desenvolvimento, se `EXPO_PUBLIC_API_URL` nao estiver definido, o app usa automaticamente o mesmo host do Expo/Metro com a porta `8081`:
+
+```text
+http://HOST_DO_EXPO:8081
+```
+
+Para forcar outro endereco, inicie o Expo com `EXPO_PUBLIC_API_URL` definido antes do comando. No fluxo USB, `npm.cmd run phone:usb:connect` tambem encaminha a porta `8081` via ADB para permitir acesso ao backend local do computador.
+
 ## Rodar no celular fisico
 
 ### Sem Expo Go, pelo navegador do celular
