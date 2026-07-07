@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { isAxiosError } from "axios";
-import { Pressable, View } from "react-native";
+import {useState} from "react";
+import {isAxiosError} from "axios";
+import {Pressable, View} from "react-native";
 import * as Haptics from "expo-haptics";
 import {
     CalendarClock,
@@ -11,14 +11,14 @@ import {
     Plus
 } from "lucide-react-native";
 
-import { Card } from "@/components/system/card/Card";
-import { FormScreen } from "@/components/system/form-screen/FormScreen";
-import { Header } from "@/components/system/header/Header";
-import { AppModal } from "@/components/system/modal/AppModal";
-import { Screen } from "@/components/system/screen/Screen";
-import { StatusPill } from "@/components/system/status-pill/StatusPill";
-import { AppText } from "@/components/system/typography/AppText";
-import { Button } from "@/components/ui/action/button/Button";
+import {Card} from "@/components/system/card/Card";
+import {FormScreen} from "@/components/system/form-screen/FormScreen";
+import {Header} from "@/components/system/header/Header";
+import {AppModal} from "@/components/system/modal/AppModal";
+import {Screen} from "@/components/system/screen/Screen";
+import {StatusPill} from "@/components/system/status-pill/StatusPill";
+import {AppText} from "@/components/system/typography/AppText";
+import {Button} from "@/components/ui/action/button/Button";
 import {
     AppDateInput,
     AppFileInput,
@@ -27,13 +27,13 @@ import {
     AppTimeInput,
     type AppFileInputValue
 } from "@/components/ui/data-input/input";
-import { requests } from "@/data/mock";
-import { useSubmitTickRequest } from "@/features/requests/hooks/useSubmitTickRequest";
+import {requests} from "@/data/mock";
+import {useSubmitTickRequest} from "@/features/requests/hooks/useSubmitTickRequest";
 import type {
     TickRequestSubmissionDto,
     TickRequestType
 } from "@/features/requests/types/tickRequest.types";
-import { colors } from "@/theme/colors";
+import {colors} from "@/theme/colors";
 
 const requestToneColor = {
     success: colors.success,
@@ -160,13 +160,13 @@ function logTickRequestError(error: unknown) {
 }
 
 function buildTickRequestPayload({
-    attachment,
-    attachmentType,
-    clockOut,
-    requestDate,
-    requestDetails,
-    requestTypeId
-}: {
+                                     attachment,
+                                     attachmentType,
+                                     clockOut,
+                                     requestDate,
+                                     requestDetails,
+                                     requestTypeId
+                                 }: {
     attachment: AppFileInputValue | null;
     attachmentType: string;
     clockOut: string;
@@ -180,18 +180,18 @@ function buildTickRequestPayload({
     return {
         requestType: requestPayloadType[requestTypeId],
         requestDate: normalizeRequestDate(requestDate),
-        ...(normalizedClockOut ? { clockOut: normalizedClockOut } : {}),
+        ...(normalizedClockOut ? {clockOut: normalizedClockOut} : {}),
         details: requestDetails.trim(),
         ...(attachment
             ? {
-                  attachmentFile: {
-                      uri: attachment.uri,
-                      fileName: attachment.name,
-                      mimeType: attachment.mimeType,
-                      file: attachment.file
-                  },
-                  attachmentDocumentType: trimmedAttachmentType
-              }
+                attachmentFile: {
+                    uri: attachment.uri,
+                    fileName: attachment.name,
+                    mimeType: attachment.mimeType,
+                    file: attachment.file
+                },
+                attachmentDocumentType: trimmedAttachmentType
+            }
             : {}),
         source: "MOBILE",
         clientRequestId: createClientRequestId(),
@@ -200,9 +200,9 @@ function buildTickRequestPayload({
 }
 
 export function RequestsScreen({
-    primaryTabLabel = "Minhas Solicitações",
-    title = "Solicitações"
-}: RequestsScreenProps) {
+                                   primaryTabLabel = "Minhas Solicitações",
+                                   title = "Solicitações"
+                               }: RequestsScreenProps) {
     const submitTickRequest = useSubmitTickRequest();
     const [isRequestModalVisible, setRequestModalVisible] = useState(false);
     const [selectedRequestTypeId, setSelectedRequestTypeId] = useState<RequestTypeId | null>(null);
@@ -304,7 +304,7 @@ export function RequestsScreen({
                             }}
                         >
                             <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
-                                <Icon color={colors.primary} size={20} />
+                                <Icon color={colors.primary} size={20}/>
                             </View>
                             <View>
                                 <AppText className="font-inter-extrabold" color={colors.text}>
@@ -352,13 +352,13 @@ export function RequestsScreen({
                         accessibilityRole="button"
                         className="w-full"
                         onPress={openRequestTypeEditor}
-                        style={({ pressed }) =>
-                            pressed ? { opacity: 0.72, transform: [{ scale: 0.99 }] } : null
+                        style={({pressed}) =>
+                            pressed ? {opacity: 0.72, transform: [{scale: 0.99}]} : null
                         }
                     >
                         <Card className="w-full flex-row items-center gap-3 p-4">
                             <View className="h-11 w-11 items-center justify-center rounded-button bg-primarySoft">
-                                <SelectedRequestIcon color={colors.primary} size={22} />
+                                <SelectedRequestIcon color={colors.primary} size={22}/>
                             </View>
                             <View className="min-w-0 flex-1 gap-1">
                                 <AppText className="font-inter-extrabold">
@@ -367,7 +367,7 @@ export function RequestsScreen({
                                 <AppText variant="label">{selectedRequestType.description}</AppText>
                             </View>
                             <View className="h-8 w-8 items-center justify-center rounded-2xl bg-primarySoft">
-                                <Pencil color={colors.primary} size={18} />
+                                <Pencil color={colors.primary} size={18}/>
                             </View>
                         </Card>
                     </Pressable>
@@ -417,7 +417,7 @@ export function RequestsScreen({
 
                     <Card className="flex-row items-center gap-3 bg-[#faf8ff] p-4">
                         <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
-                            <MessageSquareText color={colors.primary} size={20} />
+                            <MessageSquareText color={colors.primary} size={20}/>
                         </View>
                         <View className="min-w-0 flex-1 gap-1">
                             <AppText className="font-inter-extrabold">Análise do RH</AppText>
@@ -435,7 +435,7 @@ export function RequestsScreen({
 
     return (
         <Screen backgroundColor={colors.surface}>
-            <Header title={title} />
+            <Header title={title}/>
             <View className="flex-row border-b border-[#eeeaf5]">
                 <View className="flex-1 items-center border-b-2 border-primary py-3">
                     <AppText className="font-inter-extrabold" color={colors.primary}>
@@ -456,24 +456,24 @@ export function RequestsScreen({
                         <View className="flex-row items-center gap-3">
                             <View
                                 className="h-3 w-3 rounded-md"
-                                style={{ backgroundColor: requestToneColor[request.tone] }}
+                                style={{backgroundColor: requestToneColor[request.tone]}}
                             />
                             <View>
                                 <AppText className="font-inter-extrabold">{request.title}</AppText>
                                 <AppText variant="label">{request.date}</AppText>
                             </View>
                         </View>
-                        <StatusPill label={request.status} tone={request.tone} />
+                        <StatusPill label={request.status} tone={request.tone}/>
                     </View>
                 ))}
             </Card>
 
-            <Button className="mt-8" label="Nova Solicitação" onPress={openRequestModal} />
+            <Button className="mt-8" label="Nova Solicitação" onPress={openRequestModal}/>
             <View
                 className="left-6 top-[-36px] h-0 w-6 items-center justify-center"
-                style={{ pointerEvents: "none" }}
+                style={{pointerEvents: "none"}}
             >
-                <Plus color={colors.surface} size={18} />
+                <Plus color={colors.surface} size={18}/>
             </View>
 
             {renderRequestTypeModal()}

@@ -1,4 +1,4 @@
-import { api, setApiAuthContext } from "@/services/api";
+﻿import { api, setApiAuthContext, TENANT_HEADER } from "@/services/api";
 import { secureStorage } from "@/services/secureStorage";
 
 export type LoginRequestDto = {
@@ -12,6 +12,7 @@ export type LoginResponseDto = {
     refreshToken: string;
     tokenType: string;
     expiresInSeconds: number;
+    name: string;
     username: string;
     email?: string;
     tenantSlug?: string;
@@ -21,7 +22,12 @@ export type LoginResponseDto = {
 };
 
 export async function login(payload: LoginRequestDto) {
-    const response = await api.post<LoginResponseDto>("/api/v1/auth/login", payload);
+    const { companyCode, ...credentials } = payload;
+    const response = await api.post<LoginResponseDto>("/api/v1/auth/login", credentials, {
+        headers: {
+            [TENANT_HEADER]: companyCode.trim()
+        }
+    });
     const data = response.data;
 
     await secureStorage.setToken(data.accessToken);

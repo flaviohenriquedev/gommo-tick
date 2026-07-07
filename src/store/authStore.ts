@@ -1,10 +1,10 @@
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import {create} from "zustand";
+import {createJSONStorage, persist} from "zustand/middleware";
 
-import { setApiAuthContext } from "@/services/api";
-import { secureStorage } from "@/services/secureStorage";
+import {setApiAuthContext} from "@/services/api";
+import {secureStorage} from "@/services/secureStorage";
 
-import { storage } from "./storage";
+import {storage} from "./storage";
 
 type AuthSession = {
     employeeName: string;
@@ -26,17 +26,16 @@ const zustandStorage = {
 };
 
 export const useAuthStore = create<AuthState>()(
-    persist(
-        (set) => ({
+    persist((set) => ({
             isAuthenticated: false,
             employeeName: "Flavio",
             tenantSlug: undefined,
-            signIn: ({ employeeName, tenantSlug }) =>
-                set({ employeeName, isAuthenticated: true, tenantSlug }),
+            signIn: ({employeeName, tenantSlug}) =>
+                set({employeeName, isAuthenticated: true, tenantSlug}),
             signOut: async () => {
                 await secureStorage.clearToken();
                 setApiAuthContext(null, null);
-                set({ isAuthenticated: false, tenantSlug: undefined });
+                set({isAuthenticated: false, tenantSlug: undefined});
             }
         }),
         {

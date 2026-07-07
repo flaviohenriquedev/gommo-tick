@@ -1,9 +1,9 @@
-import Constants from "expo-constants";
+﻿import Constants from "expo-constants";
 import { create } from "axios";
 
 const DEV_API_PORT = 8081;
 const PRODUCTION_API_URL = "https://api.gommo.tick.local";
-const TENANT_HEADER = "X-Tenant-Slug";
+export const TENANT_HEADER = "X-Tenant-Slug";
 
 type ExpoRuntimeConfig = {
     debuggerHost?: string;

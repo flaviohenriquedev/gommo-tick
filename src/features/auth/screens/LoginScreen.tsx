@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { View } from "react-native";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { isAxiosError } from "axios";
-import { router } from "expo-router";
-import { Fingerprint } from "lucide-react-native";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
+import {useState} from "react";
+import {View} from "react-native";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {isAxiosError} from "axios";
+import {router} from "expo-router";
+import {Fingerprint} from "lucide-react-native";
+import {Controller, useForm} from "react-hook-form";
+import {z} from "zod";
 
-import { Screen } from "@/components/system/screen/Screen";
-import { AppText } from "@/components/system/typography/AppText";
-import { Button } from "@/components/ui/action/button/Button";
-import { AppEmailInput, AppInput, AppPasswordInput } from "@/components/ui/data-input/input";
-import { login } from "@/features/auth/services/auth.service";
-import { useAuthStore } from "@/store/authStore";
-import { colors } from "@/theme/colors";
+import {Screen} from "@/components/system/screen/Screen";
+import {AppText} from "@/components/system/typography/AppText";
+import {Button} from "@/components/ui/action/button/Button";
+import {AppEmailInput, AppInput, AppPasswordInput} from "@/components/ui/data-input/input";
+import {login} from "@/features/auth/services/auth.service";
+import {useAuthStore} from "@/store/authStore";
+import {colors} from "@/theme/colors";
 
 const loginSchema = z.object({
     companyCode: z.string().min(6, "Informe o código da empresa"),
@@ -51,7 +51,7 @@ export function LoginScreen() {
     const signIn = useAuthStore((state) => state.signIn);
     const [submissionError, setSubmissionError] = useState("");
     const [isSubmitting, setSubmitting] = useState(false);
-    const { control, handleSubmit } = useForm<LoginForm>({
+    const {control, handleSubmit} = useForm<LoginForm>({
         defaultValues: {
             companyCode: defaultCompanyCode,
             identifier: "",
@@ -70,7 +70,7 @@ export function LoginScreen() {
                 username: form.identifier,
                 password: form.password
             });
-            signIn({ employeeName: session.username, tenantSlug: session.tenantSlug });
+            signIn({employeeName: session.name, tenantSlug: session.tenantSlug});
             router.replace("/(tabs)");
         } catch (error) {
             setSubmissionError(getLoginErrorMessage(error));
@@ -104,7 +104,7 @@ export function LoginScreen() {
                     <Controller
                         control={control}
                         name="companyCode"
-                        render={({ field: { onChange, value }, fieldState: { error } }) => (
+                        render={({field: {onChange, value}, fieldState: {error}}) => (
                             <AppInput
                                 autoCapitalize="characters"
                                 error={error?.message}
@@ -120,7 +120,7 @@ export function LoginScreen() {
                     <Controller
                         control={control}
                         name="identifier"
-                        render={({ field: { onChange, value }, fieldState: { error } }) => (
+                        render={({field: {onChange, value}, fieldState: {error}}) => (
                             <AppEmailInput
                                 containerClassName="mt-3"
                                 error={error?.message}
@@ -135,7 +135,7 @@ export function LoginScreen() {
                     <Controller
                         control={control}
                         name="password"
-                        render={({ field: { onChange, value }, fieldState: { error } }) => (
+                        render={({field: {onChange, value}, fieldState: {error}}) => (
                             <AppPasswordInput
                                 containerClassName="mt-3"
                                 error={error?.message}
@@ -164,9 +164,9 @@ export function LoginScreen() {
                     />
 
                     <View className="my-3 flex-row items-center gap-3">
-                        <View className="h-px flex-1 bg-[#edeaf3]" />
+                        <View className="h-px flex-1 bg-[#edeaf3]"/>
                         <AppText variant="label">ou</AppText>
-                        <View className="h-px flex-1 bg-[#edeaf3]" />
+                        <View className="h-px flex-1 bg-[#edeaf3]"/>
                     </View>
 
                     <Button
@@ -176,7 +176,7 @@ export function LoginScreen() {
                         variant="secondary"
                     />
                     <View className="left-6 top-[-36px] h-0 w-6 items-center justify-center">
-                        <Fingerprint color={colors.primary} size={20} />
+                        <Fingerprint color={colors.primary} size={20}/>
                     </View>
                 </View>
 

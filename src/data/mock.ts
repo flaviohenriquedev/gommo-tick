@@ -13,18 +13,6 @@ import {
   UserRound
 } from "lucide-react-native";
 
-export const todaySummary = {
-  employeeName: "Flavio",
-  greeting: "Bom dia!",
-  date: "Quinta-feira, 02 de Julho",
-  plannedHours: "08h00",
-  workedHours: "06h00",
-  progress: 75,
-  currentBalance: "+00h15",
-  expectedExit: "17:15",
-  lastEntry: "Entrada às 08:00"
-};
-
 export const menuItems = [
   { label: "Meu Ponto", href: "/my-point", icon: Clock3 },
   { label: "Espelho", href: "/timesheet", icon: FileClock },
