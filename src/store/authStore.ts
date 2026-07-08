@@ -6,17 +6,30 @@ import {secureStorage} from "@/services/secureStorage";
 
 import {storage} from "./storage";
 
+type AttendanceSettings = {
+    requirePhoto: boolean;
+    requireLocation: boolean;
+};
+
 type AuthSession = {
     employeeName: string;
     tenantSlug?: string;
+    collaboratorId?: string;
+    jobPositionName?: string;
+    departmentName?: string;
+    attendanceSettings?: AttendanceSettings;
 };
 
-type AuthState = {
+type AuthState = AuthSession & {
     isAuthenticated: boolean;
-    employeeName: string;
-    tenantSlug?: string;
     signIn: (session: AuthSession) => void;
+    setAttendanceSettings: (settings: AttendanceSettings) => void;
     signOut: () => Promise<void>;
+};
+
+const defaultAttendanceSettings: AttendanceSettings = {
+    requirePhoto: true,
+    requireLocation: true
 };
 
 const zustandStorage = {
@@ -28,14 +41,30 @@ const zustandStorage = {
 export const useAuthStore = create<AuthState>()(
     persist((set) => ({
             isAuthenticated: false,
-            employeeName: "Flavio",
+            employeeName: "Colaborador",
             tenantSlug: undefined,
-            signIn: ({employeeName, tenantSlug}) =>
-                set({employeeName, isAuthenticated: true, tenantSlug}),
+            collaboratorId: undefined,
+            jobPositionName: undefined,
+            departmentName: undefined,
+            attendanceSettings: defaultAttendanceSettings,
+            signIn: (session) =>
+                set({
+                    ...session,
+                    attendanceSettings: session.attendanceSettings ?? defaultAttendanceSettings,
+                    isAuthenticated: true
+                }),
+            setAttendanceSettings: (attendanceSettings) => set({attendanceSettings}),
             signOut: async () => {
                 await secureStorage.clearToken();
                 setApiAuthContext(null, null);
-                set({isAuthenticated: false, tenantSlug: undefined});
+                set({
+                    isAuthenticated: false,
+                    tenantSlug: undefined,
+                    collaboratorId: undefined,
+                    jobPositionName: undefined,
+                    departmentName: undefined,
+                    attendanceSettings: defaultAttendanceSettings
+                });
             }
         }),
         {

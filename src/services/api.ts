@@ -1,5 +1,7 @@
-﻿import Constants from "expo-constants";
-import { create } from "axios";
+import Constants from "expo-constants";
+import { create, type InternalAxiosRequestConfig } from "axios";
+
+import { secureStorage } from "@/services/secureStorage";
 
 const DEV_API_PORT = 8081;
 const PRODUCTION_API_URL = "https://api.gommo.tick.local";
@@ -8,6 +10,12 @@ export const TENANT_HEADER = "X-Tenant-Slug";
 type ExpoRuntimeConfig = {
     debuggerHost?: string;
     hostUri?: string;
+};
+
+type PersistedAuthState = {
+    state?: {
+        tenantSlug?: string;
+    };
 };
 
 function extractHostName(hostUri: string) {
@@ -36,9 +44,45 @@ function getDefaultApiUrl() {
     return `http://${getExpoHostName() ?? "localhost"}:${DEV_API_PORT}`;
 }
 
+function readPersistedTenantSlug() {
+    if (typeof localStorage === "undefined") return undefined;
+
+    try {
+        const rawAuth = localStorage.getItem("auth");
+        if (!rawAuth) return undefined;
+
+        const parsedAuth = JSON.parse(rawAuth) as PersistedAuthState;
+        return parsedAuth.state?.tenantSlug;
+    } catch {
+        return undefined;
+    }
+}
+
+function hasHeader(config: InternalAxiosRequestConfig, headerName: string) {
+    return Boolean(config.headers.get?.(headerName) ?? config.headers[headerName]);
+}
+
 export const api = create({
     baseURL: process.env.EXPO_PUBLIC_API_URL ?? getDefaultApiUrl(),
     timeout: 12000
+});
+
+api.interceptors.request.use(async (config) => {
+    if (!hasHeader(config, "Authorization")) {
+        const token = await secureStorage.getToken();
+        if (token) {
+            config.headers.set("Authorization", `Bearer ${token}`);
+        }
+    }
+
+    if (!hasHeader(config, TENANT_HEADER)) {
+        const tenantSlug = readPersistedTenantSlug();
+        if (tenantSlug) {
+            config.headers.set(TENANT_HEADER, tenantSlug);
+        }
+    }
+
+    return config;
 });
 
 export function setApiAuthContext(accessToken?: string | null, tenantSlug?: string | null) {

@@ -1,4 +1,4 @@
-﻿import { api, setApiAuthContext, TENANT_HEADER } from "@/services/api";
+import { api, setApiAuthContext, TENANT_HEADER } from "@/services/api";
 import { secureStorage } from "@/services/secureStorage";
 
 export type LoginRequestDto = {
@@ -17,6 +17,11 @@ export type LoginResponseDto = {
     email?: string;
     tenantSlug?: string;
     photoObjectId?: string;
+    collaboratorId?: string;
+    jobPositionId?: string;
+    jobPositionName?: string;
+    departmentId?: string;
+    departmentName?: string;
     permissions: string[];
     platformAdmin: boolean;
 };
@@ -41,3 +46,5 @@ export async function logout() {
     await secureStorage.clearToken();
     setApiAuthContext(null, null);
 }
+
+

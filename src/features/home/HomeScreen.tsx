@@ -13,7 +13,9 @@ import {ProgressRing} from "@/features/home/components/ProgressRing";
 import {colors} from "@/theme/colors";
 import {spacing} from "@/theme/spacing";
 import {useAuthStore} from "@/store/authStore";
-import {useMemo} from "react";
+import {useAttendanceContext} from "@/features/time-clock/hooks/useAttendance";
+import {decimalHoursToLabel, formatDateLabel, minutesToLabel, workedMinutes} from "@/features/time-clock/utils/attendanceCalculations";
+import {useEffect, useMemo, useState} from "react";
 
 function getUserInitials(name?: string | null) {
     if (!name?.trim()) {
@@ -33,45 +35,44 @@ function getUserInitials(name?: string | null) {
 
 export function HomeScreen() {
     const employeeName = useAuthStore((state) => state.employeeName);
+    const attendanceQuery = useAttendanceContext();
+    const [now, setNow] = useState(new Date());
     const {width} = useWindowDimensions();
     const horizontalPadding = spacing[5] * 2;
     const gridGap = spacing[3];
     const availableGridWidth = width - horizontalPadding;
     const tileSize = Math.min(104, Math.floor((availableGridWidth - gridGap * 2) / 3));
 
-    const getTodaySummary = () => {
-        const actualDate = new Date();
-        const hours = actualDate.getHours();
+    useEffect(() => {
+        const id = setInterval(() => setNow(new Date()), 30000);
+        return () => clearInterval(id);
+    }, []);
 
+    const todaySummary = useMemo(() => {
+        const hours = now.getHours();
         let greeting = "Boa noite!";
+        if (hours >= 5 && hours < 12) greeting = "Bom dia!";
+        else if (hours >= 12 && hours < 18) greeting = "Boa tarde!";
 
-        if (hours >= 5 && hours < 12) {
-            greeting = "Bom dia!";
-        } else if (hours >= 12 && hours < 18) {
-            greeting = "Boa tarde!";
-        }
-
-        const formattedDate = actualDate.toLocaleDateString("pt-BR", {
-            weekday: "long",
-            day: "2-digit",
-            month: "long"
-        });
-
-        const date = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+        const record = attendanceQuery.data?.todayRecord;
+        const expectedMinutes = Math.round((attendanceQuery.data?.dailyWorkloadHours ?? 8) * 60);
+        const currentWorkedMinutes = workedMinutes(record, now);
+        const balanceMinutes = currentWorkedMinutes - expectedMinutes;
+        const progress = expectedMinutes > 0 ? Math.min(100, Math.round((currentWorkedMinutes / expectedMinutes) * 100)) : 0;
+        const expectedExit = record?.clockIn && !record.clockOut
+            ? new Date(now.getTime() + Math.max(0, expectedMinutes - currentWorkedMinutes) * 60000).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"})
+            : "--:--";
 
         return {
             greeting,
-            date,
-            plannedHours: "08h00",
-            workedHours: "06h00",
-            progress: 75,
-            currentBalance: "+00h15",
-            expectedExit: "17:15",
-            lastEntry: "Entrada às 08:00"
+            date: formatDateLabel(now),
+            plannedHours: decimalHoursToLabel(attendanceQuery.data?.dailyWorkloadHours ?? 8),
+            workedHours: minutesToLabel(currentWorkedMinutes),
+            progress,
+            currentBalance: `${balanceMinutes >= 0 ? "+" : "-"}${minutesToLabel(Math.abs(balanceMinutes))}`,
+            expectedExit
         };
-    };
-
-    const todaySummary = useMemo(() => getTodaySummary(), []);
+    }, [attendanceQuery.data, now]);
 
     return (
         <Screen backgroundColor={colors.primary} padded={false}>
@@ -159,3 +160,5 @@ export function HomeScreen() {
         </Screen>
     );
 }
+
+

@@ -1,60 +1,34 @@
-import {useState} from "react";
-import {isAxiosError} from "axios";
-import {Pressable, View} from "react-native";
+import { useMemo, useState } from "react";
+import { isAxiosError } from "axios";
+import { Pressable, ScrollView, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
-import {
-    CalendarClock,
-    Clock3,
-    FilePenLine,
-    MessageSquareText,
-    Pencil,
-    Plus
-} from "lucide-react-native";
+import { CalendarDays, Clock3, FilePenLine, Plus, RefreshCcw, Utensils } from "lucide-react-native";
 
-import {Card} from "@/components/system/card/Card";
-import {FormScreen} from "@/components/system/form-screen/FormScreen";
-import {Header} from "@/components/system/header/Header";
-import {AppModal} from "@/components/system/modal/AppModal";
-import {Screen} from "@/components/system/screen/Screen";
-import {StatusPill} from "@/components/system/status-pill/StatusPill";
-import {AppText} from "@/components/system/typography/AppText";
-import {Button} from "@/components/ui/action/button/Button";
+import { Card } from "@/components/system/card/Card";
+import { Header } from "@/components/system/header/Header";
+import { AppModal } from "@/components/system/modal/AppModal";
+import { Screen } from "@/components/system/screen/Screen";
+import { AppText } from "@/components/system/typography/AppText";
+import { Button } from "@/components/ui/action/button/Button";
 import {
     AppDateInput,
     AppFileInput,
     AppInput,
+    AppSelect,
     AppTextarea,
     AppTimeInput,
     type AppFileInputValue
 } from "@/components/ui/data-input/input";
-import {requests} from "@/data/mock";
-import {useSubmitTickRequest} from "@/features/requests/hooks/useSubmitTickRequest";
-import type {
-    TickRequestSubmissionDto,
-    TickRequestType
-} from "@/features/requests/types/tickRequest.types";
-import {colors} from "@/theme/colors";
-
-const requestToneColor = {
-    success: colors.success,
-    warning: colors.warning,
-    error: colors.error
-} as const;
+import { useSubmitTickRequest } from "@/features/requests/hooks/useSubmitTickRequest";
+import type { TickRequestSubmissionDto } from "@/features/requests/types/tickRequest.types";
+import { attendanceKeys, useAttendanceRecords } from "@/features/time-clock/hooks/useAttendance";
+import type { AttendanceRecordDto } from "@/features/time-clock/types/attendance.types";
+import { colors } from "@/theme/colors";
 
 type RequestsScreenProps = {
     primaryTabLabel?: string;
     title?: string;
-};
-
-type RequestTypeId = "time-adjustment" | "hour-bank" | "other";
-
-type RequestType = {
-    description: string;
-    detailsLabel: string;
-    detailsPlaceholder: string;
-    icon: typeof Clock3;
-    id: RequestTypeId;
-    title: string;
 };
 
 type ApiErrorPayload = {
@@ -65,41 +39,58 @@ type ApiErrorPayload = {
     title?: string;
 };
 
-const requestTypes: RequestType[] = [
-    {
-        description: "Corrigir entrada, saída ou intervalo.",
-        detailsLabel: "O que precisa ser ajustado?",
-        detailsPlaceholder: "Ex.: esqueci de registrar a saída às 17:00.",
-        icon: Clock3,
-        id: "time-adjustment",
-        title: "Ajuste de ponto"
-    },
-    {
-        description: "Solicitar compensação ou conferência.",
-        detailsLabel: "Qual ajuste deseja solicitar?",
-        detailsPlaceholder: "Ex.: compensar 2 horas no dia 10/07.",
-        icon: CalendarClock,
-        id: "hour-bank",
-        title: "Banco de horas"
-    },
-    {
-        description: "Enviar uma solicitação manual.",
-        detailsLabel: "Descreva sua solicitação",
-        detailsPlaceholder: "Inclua as informações necessárias para o RH analisar.",
-        icon: FilePenLine,
-        id: "other",
-        title: "Outro pedido"
-    }
+type PeriodMode = "today" | "week";
+type PunchSlotKey = "clockIn" | "breakStart" | "breakEnd" | "clockOut";
+
+type PunchSlot = {
+    emptyLabel: string;
+    icon: typeof Clock3;
+    key: PunchSlotKey;
+    title: string;
+};
+
+type EditDraft = {
+    record: AttendanceRecordDto;
+    slot: PunchSlot;
+};
+
+const punchSlots: PunchSlot[] = [
+    { emptyLabel: "Sem entrada", icon: Clock3, key: "clockIn", title: "Entrada" },
+    { emptyLabel: "Sem saída", icon: Utensils, key: "breakStart", title: "Saída para almoço" },
+    { emptyLabel: "Sem retorno", icon: RefreshCcw, key: "breakEnd", title: "Retorno do almoço" },
+    { emptyLabel: "Sem saída", icon: Clock3, key: "clockOut", title: "Fim do expediente" }
 ];
 
-const requestPayloadType: Record<RequestTypeId, TickRequestType> = {
-    "time-adjustment": "TIME_ADJUSTMENT",
-    "hour-bank": "HOUR_BANK",
-    other: "OTHER"
-};
+const reasonOptions = [
+    { label: "Esquecimento de registro", value: "Esquecimento de registro" },
+    { label: "Erro no horário registrado", value: "Erro no horário registrado" },
+    { label: "Sem conexão no momento", value: "Sem conexão no momento" },
+    { label: "Registro em equipamento incorreto", value: "Registro em equipamento incorreto" },
+    { label: "Orientação do gestor", value: "Orientação do gestor" },
+    { label: "Outro", value: "Outro" }
+];
 
 function createClientRequestId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function toIsoDate(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number) {
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + days);
+    return nextDate;
+}
+
+function toDisplayDate(isoDate: string) {
+    const [year, month, day] = isoDate.split("-");
+    if (!year || !month || !day) return isoDate;
+    return `${day}/${month}/${year}`;
 }
 
 function normalizeRequestDate(value: string) {
@@ -110,6 +101,11 @@ function normalizeRequestDate(value: string) {
 
     const [, day, month, year] = dateMatch;
     return `${year}-${month}-${day}`;
+}
+
+function formatTime(value?: string) {
+    if (!value) return "";
+    return value.slice(0, 5);
 }
 
 function stringifyErrorData(data: unknown) {
@@ -159,283 +155,302 @@ function logTickRequestError(error: unknown) {
     console.error("[TickRequest] Submission failed", error);
 }
 
-function buildTickRequestPayload({
-                                     attachment,
-                                     attachmentType,
-                                     clockOut,
-                                     requestDate,
-                                     requestDetails,
-                                     requestTypeId
-                                 }: {
-    attachment: AppFileInputValue | null;
-    attachmentType: string;
-    clockOut: string;
-    requestDate: string;
-    requestDetails: string;
-    requestTypeId: RequestTypeId;
-}): TickRequestSubmissionDto {
-    const trimmedAttachmentType = attachmentType.trim();
-    const normalizedClockOut = clockOut.trim();
+function buildDetails(reason: string, note: string, action: string) {
+    const details = [`Ação: ${action}`, `Motivo: ${reason}`];
+    const trimmedNote = note.trim();
+
+    if (trimmedNote) {
+        details.push(`Observação: ${trimmedNote}`);
+    }
+
+    return details.join("\n");
+}
+
+function buildAttachmentPayload(attachment: AppFileInputValue | null, attachmentType: string) {
+    if (!attachment) return {};
 
     return {
-        requestType: requestPayloadType[requestTypeId],
-        requestDate: normalizeRequestDate(requestDate),
-        ...(normalizedClockOut ? {clockOut: normalizedClockOut} : {}),
-        details: requestDetails.trim(),
-        ...(attachment
-            ? {
-                attachmentFile: {
-                    uri: attachment.uri,
-                    fileName: attachment.name,
-                    mimeType: attachment.mimeType,
-                    file: attachment.file
-                },
-                attachmentDocumentType: trimmedAttachmentType
-            }
-            : {}),
-        source: "MOBILE",
-        clientRequestId: createClientRequestId(),
-        submittedAt: new Date().toISOString()
+        attachmentFile: {
+            uri: attachment.uri,
+            fileName: attachment.name,
+            mimeType: attachment.mimeType,
+            file: attachment.file
+        },
+        attachmentDocumentType: attachmentType.trim() || "Documento"
     };
 }
 
+function recordTime(record: AttendanceRecordDto, slotKey: PunchSlotKey) {
+    return formatTime(record[slotKey]);
+}
+
+function sortRecords(records: AttendanceRecordDto[]) {
+    return [...records].sort((left, right) => right.workDate.localeCompare(left.workDate));
+}
+
 export function RequestsScreen({
-                                   primaryTabLabel = "Minhas Solicitações",
-                                   title = "Solicitações"
-                               }: RequestsScreenProps) {
+    primaryTabLabel = "Pontos do período",
+    title = "Solicitações"
+}: RequestsScreenProps) {
+    const queryClient = useQueryClient();
     const submitTickRequest = useSubmitTickRequest();
-    const [isRequestModalVisible, setRequestModalVisible] = useState(false);
-    const [selectedRequestTypeId, setSelectedRequestTypeId] = useState<RequestTypeId | null>(null);
-    const [isRequestFormVisible, setRequestFormVisible] = useState(false);
-    const [requestDate, setRequestDate] = useState("");
-    const [clockOut, setClockOut] = useState("");
-    const [requestDetails, setRequestDetails] = useState("");
+    const today = useMemo(() => new Date(), []);
+    const todayIso = useMemo(() => toIsoDate(today), [today]);
+    const [periodMode, setPeriodMode] = useState<PeriodMode>("today");
+    const fromIso = periodMode === "today" ? todayIso : toIsoDate(addDays(today, -6));
+    const toIso = todayIso;
+    const attendanceRecords = useAttendanceRecords(fromIso, toIso);
+    const records = useMemo(
+        () => sortRecords(attendanceRecords.data ?? []),
+        [attendanceRecords.data]
+    );
+    const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
+    const [isManualModalVisible, setManualModalVisible] = useState(false);
+    const [requestTime, setRequestTime] = useState("");
+    const [manualDate, setManualDate] = useState(toDisplayDate(todayIso));
+    const [reason, setReason] = useState("");
+    const [details, setDetails] = useState("");
     const [attachment, setAttachment] = useState<AppFileInputValue | null>(null);
     const [attachmentType, setAttachmentType] = useState("");
     const [submissionError, setSubmissionError] = useState("");
-    const selectedRequestType = requestTypes.find(
-        (requestType) => requestType.id === selectedRequestTypeId
-    );
 
-    const resetRequestDraft = () => {
-        setSelectedRequestTypeId(null);
-        setRequestDate("");
-        setClockOut("");
-        setRequestDetails("");
+    const resetForm = () => {
+        setRequestTime("");
+        setManualDate(toDisplayDate(todayIso));
+        setReason("");
+        setDetails("");
         setAttachment(null);
         setAttachmentType("");
         setSubmissionError("");
     };
 
-    const openRequestModal = () => {
-        resetRequestDraft();
-        setRequestModalVisible(true);
+    const closeEditModal = () => {
+        setEditDraft(null);
+        resetForm();
     };
 
-    const openRequestTypeEditor = () => {
-        setRequestModalVisible(true);
+    const closeManualModal = () => {
+        setManualModalVisible(false);
+        resetForm();
     };
 
-    const selectRequestType = (requestTypeId: RequestTypeId) => {
+    const openEditModal = (record: AttendanceRecordDto, slot: PunchSlot) => {
         Haptics.selectionAsync();
-        setSelectedRequestTypeId(requestTypeId);
-    };
-
-    const continueToRequestForm = () => {
-        if (!selectedRequestTypeId) return;
-
-        setRequestModalVisible(false);
-        setRequestFormVisible(true);
-    };
-
-    const closeRequestForm = () => {
-        setRequestFormVisible(false);
-        resetRequestDraft();
-    };
-
-    const sendRequest = () => {
-        const isClockOutRequired = selectedRequestTypeId === "time-adjustment";
-
-        if (
-            !selectedRequestTypeId ||
-            !requestDate ||
-            !requestDetails.trim() ||
-            (isClockOutRequired && !clockOut.trim())
-        ) {
-            return;
-        }
-
+        setEditDraft({ record, slot });
+        setRequestTime(recordTime(record, slot.key));
+        setReason("");
+        setDetails("");
+        setAttachment(null);
+        setAttachmentType("");
         setSubmissionError("");
-        submitTickRequest.mutate(
-            buildTickRequestPayload({
-                attachment,
-                attachmentType,
-                clockOut,
-                requestDate,
-                requestDetails,
-                requestTypeId: selectedRequestTypeId
-            }),
-            {
-                onSuccess: closeRequestForm,
-                onError: (error) => {
-                    logTickRequestError(error);
-                    setSubmissionError(getApiErrorMessage(error));
-                }
+    };
+
+    const openManualModal = () => {
+        resetForm();
+        setManualModalVisible(true);
+    };
+
+    const invalidateAttendance = async () => {
+        await queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+    };
+
+    const submitPayload = (payload: TickRequestSubmissionDto, onSuccess: () => void) => {
+        setSubmissionError("");
+        submitTickRequest.mutate(payload, {
+            onSuccess: async () => {
+                await invalidateAttendance();
+                onSuccess();
+            },
+            onError: (error) => {
+                logTickRequestError(error);
+                setSubmissionError(getApiErrorMessage(error));
             }
+        });
+    };
+
+    const sendEditRequest = () => {
+        if (!editDraft || !requestTime.trim() || !reason) return;
+
+        submitPayload(
+            {
+                requestType: "TIME_ADJUSTMENT",
+                requestDate: editDraft.record.workDate,
+                targetRecordId: editDraft.record.id,
+                [editDraft.slot.key]: requestTime.trim(),
+                details: buildDetails(reason, details, `Alteração de ${editDraft.slot.title}`),
+                ...buildAttachmentPayload(attachment, attachmentType),
+                source: "MOBILE",
+                clientRequestId: createClientRequestId(),
+                submittedAt: new Date().toISOString()
+            },
+            closeEditModal
         );
     };
 
-    const renderRequestTypeModal = () => (
-        <AppModal onClose={() => setRequestModalVisible(false)} visible={isRequestModalVisible}>
-            <View className="gap-3 p-4">
-                {requestTypes.map((requestType) => {
-                    const Icon = requestType.icon;
-                    const isSelected = selectedRequestTypeId === requestType.id;
+    const sendManualRequest = () => {
+        if (!manualDate || !requestTime.trim() || !reason) return;
 
-                    return (
-                        <Pressable
-                            accessibilityRole="button"
-                            className="min-h-[72px] w-full flex-row items-center gap-3 rounded-[18px] border p-3"
-                            key={requestType.id}
-                            onPress={() => selectRequestType(requestType.id)}
-                            style={{
-                                backgroundColor: isSelected ? colors.primarySoft : "#faf8ff",
-                                borderColor: isSelected ? colors.primary : colors.border
-                            }}
-                        >
-                            <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
-                                <Icon color={colors.primary} size={20}/>
-                            </View>
-                            <View>
-                                <AppText className="font-inter-extrabold" color={colors.text}>
-                                    {requestType.title}
-                                </AppText>
-                                <AppText
-                                    className="mt-1 font-inter-semibold text-xs leading-4"
-                                    color={colors.muted}
-                                >
-                                    {requestType.description}
-                                </AppText>
-                            </View>
-                        </Pressable>
-                    );
-                })}
-                <Button
-                    disabled={!selectedRequestTypeId}
-                    label="Continuar"
-                    onPress={continueToRequestForm}
-                />
-            </View>
-        </AppModal>
-    );
+        submitPayload(
+            {
+                requestType: "TIME_ADJUSTMENT",
+                requestDate: normalizeRequestDate(manualDate),
+                manualPunchTime: requestTime.trim(),
+                details: buildDetails(reason, details, "Novo ponto manual"),
+                ...buildAttachmentPayload(attachment, attachmentType),
+                source: "MOBILE",
+                clientRequestId: createClientRequestId(),
+                submittedAt: new Date().toISOString()
+            },
+            closeManualModal
+        );
+    };
 
-    if (isRequestFormVisible && selectedRequestType) {
-        const SelectedRequestIcon = selectedRequestType.icon;
-        const isClockOutVisible = selectedRequestTypeId === "time-adjustment";
-        const isClockOutRequired = selectedRequestTypeId === "time-adjustment";
-        const isSubmitDisabled =
-            !requestDate ||
-            !requestDetails.trim() ||
-            (isClockOutRequired && !clockOut.trim()) ||
-            submitTickRequest.isPending;
+    const renderPunchCard = (record: AttendanceRecordDto, slot: PunchSlot) => {
+        const Icon = slot.icon;
+        const time = recordTime(record, slot.key);
 
         return (
-            <>
-                <FormScreen
-                    actionDisabled={isSubmitDisabled}
-                    actionLabel={submitTickRequest.isPending ? "Enviando..." : "Enviar solicitação"}
-                    onAction={sendRequest}
-                    onBack={closeRequestForm}
-                    title="Nova Solicitação"
-                >
-                    <Pressable
-                        accessibilityRole="button"
-                        className="w-full"
-                        onPress={openRequestTypeEditor}
-                        style={({pressed}) =>
-                            pressed ? {opacity: 0.72, transform: [{scale: 0.99}]} : null
-                        }
-                    >
-                        <Card className="w-full flex-row items-center gap-3 p-4">
-                            <View className="h-11 w-11 items-center justify-center rounded-button bg-primarySoft">
-                                <SelectedRequestIcon color={colors.primary} size={22}/>
-                            </View>
-                            <View className="min-w-0 flex-1 gap-1">
-                                <AppText className="font-inter-extrabold">
-                                    {selectedRequestType.title}
-                                </AppText>
-                                <AppText variant="label">{selectedRequestType.description}</AppText>
-                            </View>
-                            <View className="h-8 w-8 items-center justify-center rounded-2xl bg-primarySoft">
-                                <Pencil color={colors.primary} size={18}/>
-                            </View>
-                        </Card>
-                    </Pressable>
-
-                    <AppDateInput
-                        label="Data da solicitação"
-                        onChange={setRequestDate}
-                        placeholder="Selecione a data"
-                        value={requestDate}
-                    />
-
-                    {isClockOutVisible ? (
-                        <AppTimeInput
-                            label="Horário de saída"
-                            onChangeText={setClockOut}
-                            placeholder="17:00"
-                            value={clockOut}
-                        />
-                    ) : null}
-
-                    <AppTextarea
-                        label={selectedRequestType.detailsLabel}
-                        onChangeText={setRequestDetails}
-                        placeholder={selectedRequestType.detailsPlaceholder}
-                        value={requestDetails}
-                    />
-
-                    <AppInput
-                        label="Tipo de arquivo"
-                        onChangeText={setAttachmentType}
-                        placeholder="Ex.: Atestado, declaração, comprovante"
-                        value={attachmentType}
-                    />
-
-                    <AppFileInput
-                        label="Anexo"
-                        onChange={setAttachment}
-                        placeholder="Selecionar arquivo"
-                        value={attachment}
-                    />
-
-                    {submissionError ? (
-                        <AppText className="font-inter-semibold text-xs" color={colors.error}>
-                            {submissionError}
-                        </AppText>
-                    ) : null}
-
-                    <Card className="flex-row items-center gap-3 bg-[#faf8ff] p-4">
+            <View className="w-[48%]" key={slot.key}>
+                <View className="min-h-[128px] rounded-[18px] border border-border bg-[#faf8ff] p-3">
+                    <View className="flex-row items-start justify-between gap-2">
                         <View className="h-9 w-9 items-center justify-center rounded-[18px] bg-primarySoft">
-                            <MessageSquareText color={colors.primary} size={20}/>
+                            <Icon color={colors.primary} size={19} />
                         </View>
-                        <View className="min-w-0 flex-1 gap-1">
-                            <AppText className="font-inter-extrabold">Análise do RH</AppText>
-                            <AppText variant="label">
-                                Sua solicitação será enviada para conferência e acompanhamento no
-                                histórico.
-                            </AppText>
-                        </View>
-                    </Card>
-                </FormScreen>
-                {renderRequestTypeModal()}
-            </>
+                        <Pressable
+                            accessibilityRole="button"
+                            className="h-9 w-9 items-center justify-center rounded-[18px] bg-surface"
+                            onPress={() => openEditModal(record, slot)}
+                        >
+                            <FilePenLine color={colors.primary} size={18} />
+                        </Pressable>
+                    </View>
+                    <AppText className="mt-4 font-inter-extrabold text-[13px] leading-4">
+                        {slot.title}
+                    </AppText>
+                    <AppText
+                        className="mt-1 font-inter-extrabold text-[24px] leading-8"
+                        color={time ? colors.text : colors.muted}
+                    >
+                        {time || "--:--"}
+                    </AppText>
+                    <AppText variant="label">{time ? "Registrado" : slot.emptyLabel}</AppText>
+                </View>
+            </View>
         );
-    }
+    };
+
+    const renderRecordCard = (record: AttendanceRecordDto) => (
+        <Card className="gap-4" key={record.id}>
+            <View className="flex-row items-center justify-between gap-3">
+                <View>
+                    <AppText className="font-inter-extrabold">Registros do dia</AppText>
+                    <AppText variant="label">{toDisplayDate(record.workDate)}</AppText>
+                </View>
+                <View className="h-10 w-10 items-center justify-center rounded-[20px] bg-primarySoft">
+                    <CalendarDays color={colors.primary} size={20} />
+                </View>
+            </View>
+            <View className="flex-row flex-wrap justify-between gap-y-3">
+                {punchSlots.map((slot) => renderPunchCard(record, slot))}
+            </View>
+        </Card>
+    );
+
+    const renderRequestFields = (isManual: boolean) => (
+        <ScrollView
+            className="max-h-[620px]"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+        >
+            <View className="gap-4 pb-1">
+                <View className="flex-row items-center gap-3">
+                    <View className="h-11 w-11 items-center justify-center rounded-button bg-primarySoft">
+                        {isManual ? (
+                            <Plus color={colors.primary} size={22} />
+                        ) : (
+                            <FilePenLine color={colors.primary} size={22} />
+                        )}
+                    </View>
+                    <View className="min-w-0 flex-1">
+                        <AppText className="font-inter-extrabold">
+                            {isManual ? "Novo ponto manual" : `Alterar ${editDraft?.slot.title}`}
+                        </AppText>
+                        <AppText variant="label">
+                            {isManual
+                                ? "Informe o horário esquecido para o RH analisar."
+                                : "Envie o horário correto para aprovação do RH."}
+                        </AppText>
+                    </View>
+                </View>
+
+                {isManual ? (
+                    <AppDateInput
+                        label="Data do ponto"
+                        onChange={setManualDate}
+                        placeholder="Selecione a data"
+                        value={manualDate}
+                    />
+                ) : null}
+
+                <AppTimeInput
+                    label="Horário"
+                    onChangeText={setRequestTime}
+                    placeholder="08:00"
+                    value={requestTime}
+                />
+
+                <AppSelect
+                    label="Motivo da alteração"
+                    onChange={setReason}
+                    options={reasonOptions}
+                    placeholder="Selecionar motivo"
+                    value={reason}
+                />
+
+                <AppTextarea
+                    label="Observação"
+                    onChangeText={setDetails}
+                    placeholder="Inclua detalhes que ajudem na análise."
+                    value={details}
+                />
+
+                <AppInput
+                    label="Tipo de documento"
+                    onChangeText={setAttachmentType}
+                    placeholder="Ex.: Declaração, atestado, comprovante"
+                    value={attachmentType}
+                />
+
+                <AppFileInput
+                    label="Anexo"
+                    onChange={setAttachment}
+                    placeholder="Selecionar documento"
+                    value={attachment}
+                />
+
+                {submissionError ? (
+                    <AppText className="font-inter-semibold text-xs" color={colors.error}>
+                        {submissionError}
+                    </AppText>
+                ) : null}
+
+                <Button
+                    disabled={!requestTime.trim() || !reason || submitTickRequest.isPending}
+                    label={submitTickRequest.isPending ? "Enviando..." : "Enviar solicitação"}
+                    onPress={isManual ? sendManualRequest : sendEditRequest}
+                />
+                <Button
+                    label="Cancelar"
+                    onPress={isManual ? closeManualModal : closeEditModal}
+                    variant="secondary"
+                />
+            </View>
+        </ScrollView>
+    );
 
     return (
         <Screen backgroundColor={colors.surface}>
-            <Header title={title}/>
+            <Header title={title} />
             <View className="flex-row border-b border-[#eeeaf5]">
                 <View className="flex-1 items-center border-b-2 border-primary py-3">
                     <AppText className="font-inter-extrabold" color={colors.primary}>
@@ -447,36 +462,74 @@ export function RequestsScreen({
                 </View>
             </View>
 
-            <Card className="mt-5 py-1">
-                {requests.map((request) => (
-                    <View
-                        className="flex-row items-center justify-between border-b border-[#f2eff7] py-4"
-                        key={`${request.title}-${request.date}`}
+            <View className="mt-5 flex-row gap-3">
+                <Pressable
+                    accessibilityRole="button"
+                    className="flex-1 items-center rounded-button border px-3 py-3"
+                    onPress={() => setPeriodMode("today")}
+                    style={{
+                        backgroundColor:
+                            periodMode === "today" ? colors.primarySoft : colors.surface,
+                        borderColor: periodMode === "today" ? colors.primary : colors.border
+                    }}
+                >
+                    <AppText
+                        className="font-inter-extrabold text-xs"
+                        color={periodMode === "today" ? colors.primary : colors.muted}
                     >
-                        <View className="flex-row items-center gap-3">
-                            <View
-                                className="h-3 w-3 rounded-md"
-                                style={{backgroundColor: requestToneColor[request.tone]}}
-                            />
-                            <View>
-                                <AppText className="font-inter-extrabold">{request.title}</AppText>
-                                <AppText variant="label">{request.date}</AppText>
-                            </View>
-                        </View>
-                        <StatusPill label={request.status} tone={request.tone}/>
-                    </View>
-                ))}
-            </Card>
-
-            <Button className="mt-8" label="Nova Solicitação" onPress={openRequestModal}/>
-            <View
-                className="left-6 top-[-36px] h-0 w-6 items-center justify-center"
-                style={{pointerEvents: "none"}}
-            >
-                <Plus color={colors.surface} size={18}/>
+                        Hoje
+                    </AppText>
+                </Pressable>
+                <Pressable
+                    accessibilityRole="button"
+                    className="flex-1 items-center rounded-button border px-3 py-3"
+                    onPress={() => setPeriodMode("week")}
+                    style={{
+                        backgroundColor:
+                            periodMode === "week" ? colors.primarySoft : colors.surface,
+                        borderColor: periodMode === "week" ? colors.primary : colors.border
+                    }}
+                >
+                    <AppText
+                        className="font-inter-extrabold text-xs"
+                        color={periodMode === "week" ? colors.primary : colors.muted}
+                    >
+                        Últimos 7 dias
+                    </AppText>
+                </Pressable>
             </View>
 
-            {renderRequestTypeModal()}
+            <View className="mt-5 gap-4">
+                {attendanceRecords.isLoading ? (
+                    <Card>
+                        <AppText variant="label">Carregando registros...</AppText>
+                    </Card>
+                ) : records.length ? (
+                    records.map(renderRecordCard)
+                ) : (
+                    <Card className="items-center gap-3 py-8">
+                        <View className="h-12 w-12 items-center justify-center rounded-[24px] bg-primarySoft">
+                            <Clock3 color={colors.primary} size={24} />
+                        </View>
+                        <AppText className="font-inter-extrabold">
+                            Nenhum registro encontrado
+                        </AppText>
+                        <AppText center variant="label">
+                            Solicite um ponto manual se você esqueceu de registrar uma batida.
+                        </AppText>
+                    </Card>
+                )}
+            </View>
+
+            <Button className="mt-8" label="Novo ponto manual" onPress={openManualModal} />
+
+            <AppModal onClose={closeEditModal} visible={Boolean(editDraft)}>
+                {renderRequestFields(false)}
+            </AppModal>
+
+            <AppModal onClose={closeManualModal} visible={isManualModalVisible}>
+                {renderRequestFields(true)}
+            </AppModal>
         </Screen>
     );
 }

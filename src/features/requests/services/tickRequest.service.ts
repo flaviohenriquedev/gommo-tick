@@ -1,4 +1,5 @@
 import { CrudService } from "@/services/CrudService";
+import { appendUploadFile } from "@/services/uploadFormData";
 
 import type {
     TickRequestAttachmentFileDto,
@@ -11,12 +12,6 @@ import type {
 type StorageUploadResponseDto = {
     id?: string;
     objectId?: string;
-};
-
-type ReactNativeFormDataFile = {
-    uri: string;
-    name: string;
-    type?: string;
 };
 
 class TickRequestService extends CrudService<
@@ -49,18 +44,7 @@ class TickRequestService extends CrudService<
 
     private async uploadAttachment(file: TickRequestAttachmentFileDto): Promise<string> {
         const formData = new FormData();
-
-        if (file.file) {
-            formData.append("file", file.file, file.fileName);
-        } else {
-            const filePart: ReactNativeFormDataFile = {
-                uri: file.uri,
-                name: file.fileName,
-                type: file.mimeType
-            };
-
-            formData.append("file", filePart as unknown as Blob);
-        }
+        await appendUploadFile(formData, "file", file);
 
         const response = await this.client.post<StorageUploadResponseDto>(
             "/api/v1/storage/upload",

@@ -1,4 +1,10 @@
-export type TickRequestType = "TIME_ADJUSTMENT" | "HOUR_BANK" | "OTHER";
+export type TickRequestType =
+    | "TIME_ADJUSTMENT"
+    | "DAY_ABSENCE_EXCUSE"
+    | "MEDICAL_CERTIFICATE"
+    | "LEAVE_ABSENCE"
+    | "HOUR_BANK"
+    | "OTHER";
 
 export type TickRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "RETURNED";
 
@@ -20,6 +26,11 @@ export type TickRequestAttachmentFileDto = {
 export type TickRequestCreateDto = {
     requestType: TickRequestType;
     requestDate: string;
+    targetRecordId?: string;
+    manualPunchTime?: string;
+    clockIn?: string;
+    breakStart?: string;
+    breakEnd?: string;
     clockOut?: string;
     details: string;
     attachment?: TickRequestAttachmentDto;

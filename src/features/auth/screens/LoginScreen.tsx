@@ -1,7 +1,6 @@
 import {useState} from "react";
 import {View} from "react-native";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {isAxiosError} from "axios";
 import {router} from "expo-router";
 import {Fingerprint} from "lucide-react-native";
 import {Controller, useForm} from "react-hook-form";
@@ -12,6 +11,8 @@ import {AppText} from "@/components/system/typography/AppText";
 import {Button} from "@/components/ui/action/button/Button";
 import {AppEmailInput, AppInput, AppPasswordInput} from "@/components/ui/data-input/input";
 import {login} from "@/features/auth/services/auth.service";
+import {attendanceService} from "@/features/time-clock/services/attendance.service";
+import {getApiErrorMessage} from "@/services/apiError";
 import {useAuthStore} from "@/store/authStore";
 import {colors} from "@/theme/colors";
 
@@ -24,28 +25,6 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 const defaultCompanyCode = __DEV__ ? (process.env.EXPO_PUBLIC_DEV_COMPANY_CODE ?? "000000000") : "";
-
-type ApiErrorPayload = {
-    detail?: string;
-    error?: string;
-    message?: string;
-    title?: string;
-};
-
-function getLoginErrorMessage(error: unknown) {
-    if (isAxiosError<ApiErrorPayload>(error)) {
-        const data = error.response?.data;
-        return (
-            data?.message ??
-            data?.detail ??
-            data?.error ??
-            data?.title ??
-            "Não foi possível entrar. Confira seus dados."
-        );
-    }
-
-    return "Não foi possível entrar. Confira seus dados.";
-}
 
 export function LoginScreen() {
     const signIn = useAuthStore((state) => state.signIn);
@@ -70,10 +49,23 @@ export function LoginScreen() {
                 username: form.identifier,
                 password: form.password
             });
-            signIn({employeeName: session.name, tenantSlug: session.tenantSlug});
+            const attendanceContext = await attendanceService.getMobileContext().catch(() => null);
+            signIn({
+                employeeName: attendanceContext?.collaboratorName ?? session.name,
+                tenantSlug: session.tenantSlug,
+                collaboratorId: session.collaboratorId,
+                jobPositionName: session.jobPositionName,
+                departmentName: session.departmentName,
+                attendanceSettings: attendanceContext
+                    ? {
+                        requirePhoto: attendanceContext.requirePhoto,
+                        requireLocation: attendanceContext.requireLocation
+                    }
+                    : undefined
+            });
             router.replace("/(tabs)");
         } catch (error) {
-            setSubmissionError(getLoginErrorMessage(error));
+            setSubmissionError(getApiErrorMessage(error, "Não foi possível entrar. Confira seus dados."));
         } finally {
             setSubmitting(false);
         }
