@@ -10,23 +10,36 @@ import {createMonthDays, formatDate, monthNames, weekDays} from "../shared/dateI
 import {ReadonlyInput, type PickerInputProps} from "../shared/InputPrimitives";
 
 export type AppDateInputProps = PickerInputProps & {
-    onChange?: (value: string, date: Date) => void;
-    value?: string;
+    onChange?: (date: Date) => void;
+    value?: Date | null;
 };
+
+function normalizeDate(value?: Date | null) {
+    if (!value) return null;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
 
 export function AppDateInput({onChange, value, ...props}: AppDateInputProps) {
     const [isVisible, setVisible] = useState(false);
-    const [selectedValue, setSelectedValue] = useState(value ?? "");
-    const [visibleMonth, setVisibleMonth] = useState(() => new Date());
-    const displayValue = value ?? selectedValue;
+    const [internalDate, setInternalDate] = useState<Date | null>(() => normalizeDate(value));
+    const [visibleMonth, setVisibleMonth] = useState(() => normalizeDate(value) ?? new Date());
+    const selectedDate = useMemo(() => (value === undefined ? internalDate : normalizeDate(value)), [internalDate, value]);
+    const displayValue = selectedDate ? formatDate(selectedDate) : "";
     const monthDays = useMemo(() => createMonthDays(visibleMonth), [visibleMonth]);
+
+    const openCalendar = () => {
+        if (selectedDate) {
+            setVisibleMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+        }
+
+        setVisible(true);
+    };
 
     const selectDay = (day: number) => {
         const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day);
-        const formatted = formatDate(date);
 
-        setSelectedValue(formatted);
-        onChange?.(formatted, date);
+        setInternalDate(date);
+        onChange?.(date);
         setVisible(false);
     };
 
@@ -35,7 +48,7 @@ export function AppDateInput({onChange, value, ...props}: AppDateInputProps) {
             <ReadonlyInput
                 {...props}
                 icon={<CalendarDays color={colors.primary} size={20}/>}
-                onPress={() => setVisible(true)}
+                onPress={openCalendar}
                 value={displayValue}
             />
             <Modal animationType="fade" transparent visible={isVisible}>
@@ -74,8 +87,17 @@ export function AppDateInput({onChange, value, ...props}: AppDateInputProps) {
 
                         <View className="flex-row flex-wrap">
                             {monthDays.map((day, index) => {
-                                const dateValue = day ? formatDate(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day)) : "";
-                                const isSelected = Boolean(day && dateValue === displayValue);
+                                const currentDate = day
+                                    ? new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day)
+                                    : null;
+
+                                const isSelected = Boolean(
+                                    currentDate &&
+                                    selectedDate &&
+                                    currentDate.getFullYear() === selectedDate.getFullYear() &&
+                                    currentDate.getMonth() === selectedDate.getMonth() &&
+                                    currentDate.getDate() === selectedDate.getDate()
+                                );
 
                                 return (
                                     <Pressable

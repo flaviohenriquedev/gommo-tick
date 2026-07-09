@@ -72,7 +72,7 @@ export function LoginScreen() {
     };
 
     return (
-        <Screen backgroundColor={colors.surface} scroll={false}>
+        <Screen backgroundColor={colors.surface}>
             <View className="flex-1 justify-center py-6">
                 <View className="mb-10 items-center">
                     <AppText className="font-inter-extrabold text-4xl leading-[38px] tracking-[-1.2px]">

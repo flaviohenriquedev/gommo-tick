@@ -48,7 +48,14 @@ export type TickRequestUpdateDto = Partial<TickRequestCreateDto>;
 
 export type TickRequestResponseDto = TickRequestCreateDto & {
     id: string;
-    status: TickRequestStatus;
+    code?: number;
+    workDate?: string;
+    referenceId?: string;
+    notes?: string;
+    requestStatus?: TickRequestStatus;
+    reviewedAt?: string;
+    reviewReason?: string;
+    status?: TickRequestStatus;
     createdAt?: string;
     updatedAt?: string;
 };

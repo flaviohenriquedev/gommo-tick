@@ -6,16 +6,15 @@ import { Header } from "@/components/system/header/Header";
 import { MetricCard } from "@/components/system/metric-card/MetricCard";
 import { Screen } from "@/components/system/screen/Screen";
 import { AppText } from "@/components/system/typography/AppText";
-import { AppDateInput } from "@/components/ui/data-input/input";
+import { AppDateRangeInput } from "@/components/ui/data-input/input";
 import { mirrorDays } from "@/data/mock";
 import { colors } from "@/theme/colors";
-import { periodLabel } from "@/utils/date";
 
 export function MirrorScreen() {
   return (
     <Screen backgroundColor={colors.surface}>
       <Header title="Espelho de Ponto" />
-      <AppDateInput value={periodLabel} />
+      <AppDateRangeInput value={{start: new Date(2026, 5, 1), end: new Date(2026, 5, 30)}} />
 
       <View className="mt-5 flex-row gap-3">
         <MetricCard label="Total no período" value="176h00" />

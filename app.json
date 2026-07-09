@@ -25,6 +25,12 @@
         {
           "cameraPermission": "Permita que o Gommo Tick use a camera para validar o registro de ponto."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permita que o Gommo Tick use sua localização para validar o registro de ponto."
+        }
       ]
     ],
     "experiments": {

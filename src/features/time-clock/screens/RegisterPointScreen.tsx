@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as Location from "expo-location";
+import { useFocusEffect } from "expo-router";
 import { Camera } from "lucide-react-native";
 
 import { Card } from "@/components/system/card/Card";
@@ -34,6 +36,14 @@ type BrowserPosition = {
     };
 };
 
+type DevicePosition = {
+    coords: {
+        latitude: number;
+        longitude: number;
+        accuracy?: number | null;
+    };
+};
+
 type LocationSnapshot = {
     accuracy?: number;
     address?: string;
@@ -41,9 +51,6 @@ type LocationSnapshot = {
     longitude: number;
 };
 
-type ReverseGeocodeResponse = {
-    display_name?: string;
-};
 
 function getBrowserLocation() {
     return new Promise<BrowserPosition>((resolve, reject) => {
@@ -71,29 +78,67 @@ function locationErrorMessage(error: unknown) {
     return error instanceof Error ? error.message : "Não foi possível obter sua localização.";
 }
 
-async function reverseGeocode(latitude: number, longitude: number) {
-    const params = new URLSearchParams({
-        format: "jsonv2",
-        lat: String(latitude),
-        lon: String(longitude),
-        zoom: "18",
-        addressdetails: "1"
-    });
-    const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?${params.toString()}`,
-        {
-            headers: {
-                Accept: "application/json",
-                "Accept-Language": "pt-BR"
-            }
-        }
-    );
+function formatNativeAddress(address: Location.LocationGeocodedAddress) {
+    if (address.formattedAddress?.trim()) {
+        return address.formattedAddress.trim();
+    }
 
-    if (!response.ok) return undefined;
-
-    const data = (await response.json()) as ReverseGeocodeResponse;
-    return data.display_name;
+    const streetLine = [address.street, address.streetNumber].filter(Boolean).join(", ");
+    return [
+        address.name,
+        streetLine,
+        address.district,
+        address.city,
+        address.region,
+        address.postalCode
+    ]
+        .filter((part, index, parts) => Boolean(part) && parts.indexOf(part) === index)
+        .join(" - ");
 }
+
+async function getNativeAddress(latitude: number, longitude: number) {
+    if (Platform.OS === "web") return undefined;
+
+    const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
+    const formattedAddress = addresses[0] ? formatNativeAddress(addresses[0]) : "";
+    return formattedAddress || undefined;
+}
+
+async function safeGetNativeAddress(latitude: number, longitude: number) {
+    try {
+        return await getNativeAddress(latitude, longitude);
+    } catch {
+        return undefined;
+    }
+}
+
+async function getDeviceLocation(): Promise<DevicePosition> {
+    if (Platform.OS === "web") {
+        return getBrowserLocation();
+    }
+
+    const currentPermission = await Location.getForegroundPermissionsAsync();
+    const permission = currentPermission.granted
+        ? currentPermission
+        : await Location.requestForegroundPermissionsAsync();
+
+    if (!permission.granted) {
+        throw new Error("Permita o acesso à localização para registrar o ponto.");
+    }
+
+    const lastKnownPosition = await Location.getLastKnownPositionAsync({
+        maxAge: 60000,
+        requiredAccuracy: 150
+    });
+
+    return (
+        lastKnownPosition ??
+        Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High
+        })
+    );
+}
+
 
 export function RegisterPointScreen() {
     const cameraRef = useRef<CameraView | null>(null);
@@ -108,7 +153,9 @@ export function RegisterPointScreen() {
     const [location, setLocation] = useState<LocationSnapshot | null>(null);
     const [locationError, setLocationError] = useState("");
     const [isLocating, setIsLocating] = useState(false);
-    const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
+    const didRunInitialCameraPermissionFlow = useRef(false);
+    const isRequestingLocation = useRef(false);
+    const locationRef = useRef<LocationSnapshot | null>(null);
 
     useEffect(() => {
         const id = setInterval(() => setNow(new Date()), 1000);
@@ -145,45 +192,78 @@ export function RegisterPointScreen() {
 
     const requestLocation = useCallback(async () => {
         if (!settings.requireLocation) {
+            locationRef.current = null;
             setLocation(null);
             setLocationError("");
             return null;
         }
 
-        setHasRequestedLocation(true);
+        if (isRequestingLocation.current) return locationRef.current;
+
+        isRequestingLocation.current = true;
         setIsLocating(true);
         setLocationError("");
         try {
-            const position = await getBrowserLocation();
+            const position = await getDeviceLocation();
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const nextLocation = {
                 latitude,
                 longitude,
-                accuracy: position.coords.accuracy,
-                address: await reverseGeocode(latitude, longitude)
+                accuracy: position.coords.accuracy ?? undefined
             };
+
+            locationRef.current = nextLocation;
             setLocation(nextLocation);
+
+            const address = await safeGetNativeAddress(latitude, longitude);
+            if (address) {
+                const locatedAddress = { ...nextLocation, address };
+                locationRef.current = locatedAddress;
+                setLocation((currentLocation) =>
+                    currentLocation?.latitude === latitude && currentLocation.longitude === longitude
+                        ? locatedAddress
+                        : currentLocation
+                );
+                return locatedAddress;
+            }
+
             return nextLocation;
         } catch (caught) {
             const message = locationErrorMessage(caught);
+            locationRef.current = null;
             setLocation(null);
             setLocationError(message);
             return null;
         } finally {
+            isRequestingLocation.current = false;
             setIsLocating(false);
         }
     }, [settings.requireLocation]);
 
     useEffect(() => {
-        if (!settings.requireLocation || isComplete || hasRequestedLocation || isLocating) return;
+        if (isComplete || didRunInitialCameraPermissionFlow.current || !settings.requirePhoto) return;
+        if (cameraPermission?.granted || cameraPermission?.canAskAgain === false) return;
 
-        const timeoutId = setTimeout(() => {
+        didRunInitialCameraPermissionFlow.current = true;
+        void requestCameraPermission();
+    }, [
+        cameraPermission?.canAskAgain,
+        cameraPermission?.granted,
+        isComplete,
+        requestCameraPermission,
+        settings.requirePhoto
+    ]);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (isComplete || !settings.requireLocation) return undefined;
+
             void requestLocation();
-        }, 0);
 
-        return () => clearTimeout(timeoutId);
-    }, [hasRequestedLocation, isComplete, isLocating, requestLocation, settings.requireLocation]);
+            return undefined;
+        }, [isComplete, requestLocation, settings.requireLocation])
+    );
 
     const ensureCameraPermission = async () => {
         if (!settings.requirePhoto) return true;

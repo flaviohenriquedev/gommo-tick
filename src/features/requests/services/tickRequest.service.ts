@@ -23,6 +23,13 @@ class TickRequestService extends CrudService<
         super("/api/v1/attendance-records/submissions");
     }
 
+    async getMobileSubmissions(from?: string, to?: string): Promise<TickRequestResponseDto[]> {
+        const response = await this.client.get<TickRequestResponseDto[]>("/api/v1/attendance-records/mobile/submissions", {
+            params: { from, to }
+        });
+        return response.data;
+    }
+
     async submit(payload: TickRequestSubmissionDto): Promise<TickRequestResponseDto> {
         const { attachmentDocumentType, attachmentFile, ...submissionPayload } = payload;
 
