@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { create, type InternalAxiosRequestConfig } from "axios";
+import { create, type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import { secureStorage } from "@/services/secureStorage";
 
@@ -17,6 +17,14 @@ type PersistedAuthState = {
         tenantSlug?: string;
     };
 };
+
+declare module "axios" {
+    export interface AxiosRequestConfig {
+        skipAuthRetry?: boolean;
+        skipAuth?: boolean;
+        _retry?: boolean;
+    }
+}
 
 function extractHostName(hostUri: string) {
     const authority = hostUri
@@ -62,13 +70,17 @@ function hasHeader(config: InternalAxiosRequestConfig, headerName: string) {
     return Boolean(config.headers.get?.(headerName) ?? config.headers[headerName]);
 }
 
+function isAuthEndpoint(url?: string) {
+    return Boolean(url?.includes("/api/v1/auth/"));
+}
+
 export const api = create({
     baseURL: process.env.EXPO_PUBLIC_API_URL ?? getDefaultApiUrl(),
     timeout: 12000
 });
 
 api.interceptors.request.use(async (config) => {
-    if (!hasHeader(config, "Authorization")) {
+    if (!config.skipAuth && !hasHeader(config, "Authorization")) {
         const token = await secureStorage.getToken();
         if (token) {
             config.headers.set("Authorization", `Bearer ${token}`);
@@ -84,6 +96,39 @@ api.interceptors.request.use(async (config) => {
 
     return config;
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError) => {
+        const config = error.config;
+        const status = error.response?.status;
+
+        if (
+            !config ||
+            config.skipAuthRetry ||
+            config._retry ||
+            config.skipAuth ||
+            isAuthEndpoint(config.url) ||
+            (status !== 401 && status !== 403)
+        ) {
+            return Promise.reject(error);
+        }
+
+        config._retry = true;
+
+        const { refreshSession } = await import("@/features/auth/services/auth.service");
+        const accessToken = await refreshSession();
+
+        if (!accessToken) {
+            const { useAuthStore } = await import("@/store/authStore");
+            await useAuthStore.getState().signOut();
+            return Promise.reject(error);
+        }
+
+        config.headers.set("Authorization", `Bearer ${accessToken}`);
+        return api.request(config);
+    }
+);
 
 export function setApiAuthContext(accessToken?: string | null, tenantSlug?: string | null) {
     if (accessToken) {

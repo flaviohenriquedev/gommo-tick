@@ -46,16 +46,36 @@ export type TickRequestSubmissionDto = Omit<TickRequestCreateDto, "attachment"> 
 
 export type TickRequestUpdateDto = Partial<TickRequestCreateDto>;
 
-export type TickRequestResponseDto = TickRequestCreateDto & {
+export type TickRequestResponseDto = {
     id: string;
     code?: number;
+    collaboratorId?: string;
+    collaboratorName?: string;
     workDate?: string;
+    requestDate?: string;
+    attendanceRecordId?: string;
+    /** @deprecated use attendanceRecordId */
     referenceId?: string;
+    targetRecordId?: string;
+    requestType: TickRequestType;
+    originalClockIn?: string;
+    originalClockOut?: string;
+    originalBreakStart?: string;
+    originalBreakEnd?: string;
+    originalNotes?: string;
+    clockIn?: string;
+    breakStart?: string;
+    breakEnd?: string;
+    clockOut?: string;
     notes?: string;
+    details?: string;
     requestStatus?: TickRequestStatus;
     reviewedAt?: string;
     reviewReason?: string;
     status?: TickRequestStatus;
+    source?: TickRequestSource;
+    clientRequestId?: string;
+    submittedAt?: string;
     createdAt?: string;
     updatedAt?: string;
 };

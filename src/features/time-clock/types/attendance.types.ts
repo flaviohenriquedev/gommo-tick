@@ -16,6 +16,7 @@ export type AttendanceRecordDto = {
     id: string;
     code?: number;
     collaboratorId: string;
+    collaboratorName?: string;
     workDate: string;
     clockIn?: string;
     breakStart?: string;
@@ -24,14 +25,11 @@ export type AttendanceRecordDto = {
     breakMinutes?: number;
     expectedHours?: number;
     workedHours?: number;
-    requestType?: AttendanceRequestType;
-    requestStatus?: "PENDING" | "APPROVED" | "REJECTED";
     notes?: string;
     photoObjectId?: string;
     latitude?: number;
     longitude?: number;
     locationAccuracyMeters?: number;
-    submittedAt?: string;
 };
 
 export type AttendanceMobileContextDto = {

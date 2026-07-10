@@ -66,7 +66,9 @@ function requestDate(request: TickRequestResponseDto) {
 
 function requestKindLabel(request: TickRequestResponseDto) {
     if (request.requestType !== "TIME_ADJUSTMENT") return "Solicitação geral";
-    return request.referenceId ?? request.targetRecordId ? "Correção de batida" : "Ponto manual";
+    return request.attendanceRecordId ?? request.referenceId ?? request.targetRecordId
+        ? "Correção de batida"
+        : "Ponto manual";
 }
 
 function requestSummary(request: TickRequestResponseDto) {
@@ -74,10 +76,9 @@ function requestSummary(request: TickRequestResponseDto) {
         ["Entrada", request.clockIn],
         ["Saída almoço", request.breakStart],
         ["Retorno almoço", request.breakEnd],
-        ["Fim expediente", request.clockOut],
-        ["Ponto manual", request.manualPunchTime]
+        ["Fim expediente", request.clockOut]
     ]
-        .map(([label, value]) => [label, formatTime(value as string | undefined)] as const)
+        .map(([label, value]) => [label, formatTime(value)] as const)
         .filter(([, value]) => Boolean(value));
 
     if (!entries.length) return "Nenhum horário informado.";
@@ -92,7 +93,10 @@ function requestDetails(request: TickRequestResponseDto) {
 function RequestCard({ request }: { request: TickRequestResponseDto }) {
     const status = requestStatus(request);
     const meta = statusMeta[status] ?? statusMeta.PENDING;
-    const Icon = request.referenceId ?? request.targetRecordId ? FilePenLine : Plus;
+    const isCorrection = Boolean(
+        request.attendanceRecordId ?? request.referenceId ?? request.targetRecordId
+    );
+    const Icon = isCorrection ? FilePenLine : Plus;
 
     return (
         <Card className="gap-3" key={request.id}>

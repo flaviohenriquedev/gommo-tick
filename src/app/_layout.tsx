@@ -14,8 +14,18 @@ import {
 } from "@expo-google-fonts/inter";
 
 import { queryClient } from "@/services/queryClient";
+import { NotificationListener } from "@/features/notifications/components/NotificationListener";
+import { useAuthStore } from "@/store/authStore";
 
 SplashScreen.preventAutoHideAsync();
+
+function AuthenticatedNotifications() {
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    if (!isAuthenticated) {
+        return null;
+    }
+    return <NotificationListener />;
+}
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
@@ -37,6 +47,7 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
+            <AuthenticatedNotifications />
             <Stack
                 screenOptions={{
                     contentStyle: { backgroundColor: "#f7f5fb" },

@@ -78,30 +78,6 @@ export function MyPointScreen() {
                 value={selectedDate}
             />
 
-            <View className="mt-5 flex-row gap-3">
-                <MetricCard label="Horas trabalhadas" value={minutesToLabel(currentWorkedMinutes)}/>
-                <MetricCard label="Meta do dia" value={decimalHoursToLabel(record?.expectedHours ?? contextQuery.data?.dailyWorkloadHours ?? 8)}/>
-            </View>
-
-            <Card className="mt-5 gap-1">
-                {recordsQuery.isFetching ? (
-                    <AppText center variant="label">Carregando registros...</AppText>
-                ) : record ? (
-                    entries.map((entry) => (
-                        <View className="flex-row items-center gap-3 border-b border-border py-3 last:border-b-0" key={entry.label}>
-                            <View
-                                className="h-3 w-3 rounded-full"
-                                style={{backgroundColor: dotColor[entry.tone]}}
-                            />
-                            <AppText className="flex-1" variant="subtitle">{entry.label}</AppText>
-                            <AppText className="font-inter-extrabold">{entry.time}</AppText>
-                        </View>
-                    ))
-                ) : (
-                    <AppText center variant="label">Nenhum registro encontrado para esta data.</AppText>
-                )}
-            </Card>
-
             <View className="mt-5 flex-row items-center gap-3 rounded-button bg-[#f6f7f6] p-4">
                 <AppText className="font-inter-extrabold text-[26px]"
                          color={remainingMinutes === 0 ? colors.success : colors.warning}>

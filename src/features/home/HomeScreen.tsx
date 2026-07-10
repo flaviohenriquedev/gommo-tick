@@ -14,6 +14,7 @@ import {colors} from "@/theme/colors";
 import {spacing} from "@/theme/spacing";
 import {useAuthStore} from "@/store/authStore";
 import {useAttendanceContext} from "@/features/time-clock/hooks/useAttendance";
+import {useNotificationSummary} from "@/features/notifications/hooks/useNotifications";
 import {decimalHoursToLabel, formatDateLabel, minutesToLabel, workedMinutes} from "@/features/time-clock/utils/attendanceCalculations";
 import {useEffect, useMemo, useState} from "react";
 
@@ -36,6 +37,8 @@ function getUserInitials(name?: string | null) {
 export function HomeScreen() {
     const employeeName = useAuthStore((state) => state.employeeName);
     const attendanceQuery = useAttendanceContext();
+    const notificationsQuery = useNotificationSummary();
+    const unreadCount = notificationsQuery.data?.unreadCount ?? 0;
     const [now, setNow] = useState(new Date());
     const {width} = useWindowDimensions();
     const horizontalPadding = spacing[5] * 2;
@@ -102,7 +105,7 @@ export function HomeScreen() {
                     </View>
                     <Pressable
                         accessibilityRole="button"
-                        className="h-10 w-10 items-center justify-center rounded-button"
+                        className="relative h-10 w-10 items-center justify-center rounded-button"
                         onPress={() => {
                             Haptics.selectionAsync();
                             router.push("/notifications");
@@ -110,6 +113,13 @@ export function HomeScreen() {
                         style={({pressed}) => (pressed ? {opacity: 0.68, transform: [{scale: 0.94}]} : null)}
                     >
                         <Bell color={colors.surface} size={23}/>
+                        {unreadCount > 0 ? (
+                            <View className="absolute right-0.5 top-0.5 min-w-[16px] items-center rounded-full bg-warning px-1">
+                                <AppText className="font-inter-extrabold text-[10px] leading-4" color={colors.surface}>
+                                    {unreadCount > 9 ? "9+" : String(unreadCount)}
+                                </AppText>
+                            </View>
+                        ) : null}
                     </Pressable>
                 </View>
             </View>
